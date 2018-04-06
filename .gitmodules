@@ -1,0 +1,6 @@
+[submodule "ids"]
+	path = ids
+	url = http://git.chise.org/git/chise/ids.git
+[submodule "unihan"]
+	path = unihan
+	url = https://github.com/tessercat/unihan.git
