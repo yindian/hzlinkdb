@@ -4,3 +4,9 @@
 [submodule "unihan"]
 	path = unihan
 	url = https://github.com/tessercat/unihan.git
+[submodule "cjkvi-tables"]
+	path = cjkvi-tables
+	url = https://github.com/cjkvi/cjkvi-tables.git
+[submodule "cjkvi-variants"]
+	path = cjkvi-variants
+	url = https://github.com/cjkvi/cjkvi-variants.git
