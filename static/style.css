@@ -1,0 +1,42 @@
+body {
+  font-family: SimSun, SimSun-ExtB, 宋体, 思源宋体, Source Han Serif SC, TH-Tshyn-P0, TH-Tshyn-P1, TH-Tshyn-P2;
+  background: #F2E9E5;
+}
+hr {
+  color: #AF9A87;
+  background-color: #AF9A87;
+  border: 0px;
+  height: 1px;
+}
+.navigation {
+  border-bottom: 1px solid #AF9A87;
+}
+.navigation div {
+  text-align: center;
+}
+.navigation form {
+  width: 50%;
+  min-width: 30em;
+  padding: 1ex;
+  margin: auto;
+  white-space: nowrap;
+}
+.navigation input[type="text"] {
+  min-width: 10em;
+  width: 70%;
+}
+.result {
+  padding: 1em;
+  border-bottom: 1px solid #AF9A87;
+}
+.float_left {
+  float: left;
+  margin-right: 1ex;
+  /*
+  border: 1px solid #AF9A87;
+  */
+}
+.char {
+  font-size: xx-large;
+}
+/* vim: set ts=2 sw=2 et tw=80 cc=80 : */

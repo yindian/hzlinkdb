@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hanzi Link Database</title>
+<link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body>
+  <div class="navigation">
+    <div class="table_list">
+      {% for name, text in table_list %}
+      <span><a href="/table?n={{name}}">{{text}}</a></span>
+      {% endfor %}
+    </div>
+    <form name="nav_form" method="get">
+      <label>
+        Input Hanzi:
+        <input type="text" name="q"/>
+      </label>
+      <input type="submit"/>
+    </form>
+  </div>
+  {% for d in result_list %}
+  <div class="result">
+    <div class="float_left">
+      <div class="char">{{d.get('char', '')}}</div>
+      <div class="code">{{d.get('code', '')}}</div>
+    </div>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+    <!--
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+    non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    -->
+    <hr/>
+    <div class="error"><pre>{{d.get('error', '')}}</pre></div>
+  </div>
+  {% endfor %}
+</body>
+</html>
+<!-- vim: set ts=2 sw=2 et tw=80 cc=80 : -->
