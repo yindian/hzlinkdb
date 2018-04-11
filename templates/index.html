@@ -26,15 +26,14 @@
       <div class="char">{{d.get('char', '')}}</div>
       <div class="code">{{d.get('code', '')}}</div>
     </div>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-    <!--
-    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-    non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-    -->
-    <hr/>
+    <div class="readings">
+      {% set readings = d.get('readings') or {} -%}
+      {% for k in readings.keys()|sort: %}
+      <span class="field"><b>{{k}}</b>:&nbsp;{{readings[k]|safe}}</span>
+      <span class="sep"> ; </span>
+      {% endfor %}
+    </div>
+    &nbsp;
     <div class="error"><pre>{{d.get('error', '')}}</pre></div>
   </div>
   {% endfor %}

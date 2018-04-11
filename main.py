@@ -8,6 +8,12 @@ import string
 import struct
 import traceback
 
+import time
+_start = time.clock()
+import unihan
+_end = time.clock()
+print >> sys.stderr, _end - _start, 'seconds elapsed importing unihan'
+
 app = Flask(__name__)
 
 app.config.update(dict(
@@ -17,6 +23,8 @@ app.config.update(dict(
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 def connect_db():
+    if not os.path.exists(app.config['DATABASE']):
+        os.makedirs(os.path.dirname(app.config['DATABASE']))
     rv = sqlite3.connect(app.config['DATABASE'],
             detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     rv.row_factory = sqlite3.Row
@@ -78,6 +86,9 @@ def query_split(s):
             state = 0
     return [s for s in ar if not s.isspace()]
 
+def _readings_linker(k, v):
+    return '<a href="/l?n=readings&k=%s&v=%s">%s</a>' % (k, v, v)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = get_db()
@@ -92,19 +103,43 @@ def index():
             dd = {}
             ar.append(dd)
             try:
+                code = None
                 if s.startswith('U'):
-                    dd['char'] = unichar(int(s[2:], 16))
+                    code = int(s[2:], 16)
+                    dd['char'] = unichar(code)
                     dd['code'] = s
                 elif s.startswith('&'):
                     dd['char'] = ''
                     dd['code'] = s
                 else:
                     dd['char'] = s
-                    dd['code'] = 'U+%04X' % (ordinal(s),)
+                    code = ordinal(s)
+                    dd['code'] = 'U+%04X' % (code,)
+                if code:
+                    dd['readings'] = unihan.get_readings_by_code_w_link(
+                            code, linker=_readings_linker)
             except:
                 dd['error'] = traceback.format_exc()
                 traceback.print_exc()
     return render_template('index.html', **d)
+
+@app.route('/l', methods=['GET', 'POST'])
+def link():
+    db = get_db()
+    d = {}
+    d['result_list'] = ar = []
+    name = request.args.get('n') or request.form.get('n')
+    key = request.args.get('k') or request.form.get('k')
+    val = request.args.get('v') or request.form.get('v')
+    d['key'], d['val'] = key, val
+    if name == 'readings':
+        try:
+            for code in unihan.get_codes_by_reading(key, val):
+                ar.append(unichar(code))
+        except:
+            d['error'] = traceback.format_exc()
+            traceback.print_exc()
+    return render_template('link.html', **d)
 
 if __name__ == '__main__':
     from gevent.wsgi import WSGIServer

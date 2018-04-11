@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hanzi Link Database</title>
+<link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body style="font-size: xx-large;">
+  <div class="navigation">
+    <span class="field"><b>{{key}}</b>:&nbsp;{{val}}</span>
+  </div>
+  <div class="result">
+    {% for s in result_list %}
+    <a href="/?q={{s}}">{{s}}</a>
+    {% endfor %}
+    <div class="error"><pre>{{error}}</pre></div>
+  </div>
+</body>
+</html>
+<!-- vim: set ts=2 sw=2 et tw=80 cc=80 : -->

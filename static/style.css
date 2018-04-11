@@ -1,5 +1,10 @@
 body {
-  font-family: SimSun, SimSun-ExtB, 宋体, 思源宋体, Source Han Serif SC, TH-Tshyn-P0, TH-Tshyn-P1, TH-Tshyn-P2;
+  font-family: Linux Libertine Display O, DejaVu Serif,
+  SimSun, SimSun-ExtB, 宋体
+  , 思源宋体, Source Han Serif SC
+  , TH-Tshyn-P0, TH-Tshyn-P1, TH-Tshyn-P2
+  ,HanaMinA, HanaMinB
+  ;
   background: #F2E9E5;
 }
 hr {
@@ -32,6 +37,7 @@ hr {
 .float_left {
   float: left;
   margin-right: 1ex;
+  background-color: #F8F5F1;
   /*
   border: 1px solid #AF9A87;
   */
