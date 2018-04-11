@@ -6,6 +6,8 @@ from sqlite3 import dbapi2 as sqlite3
 import sys, os
 import string
 import struct
+import urllib
+import xml.sax.saxutils
 import traceback
 
 import time
@@ -88,7 +90,16 @@ def query_split(s):
     return [s for s in ar if not s.isspace()]
 
 def _readings_linker(k, v):
-    return '<a href="/l?n=readings&k=%s&v=%s">%s</a>' % (k, v, v)
+    return '<a href="/l?n=readings&k=%s&v=%s">%s</a>' % (
+            k,
+            urllib.quote(v.encode('utf-8')),
+            xml.sax.saxutils.escape(v))
+
+def _variants_linker(k, v):
+    vv = urllib.quote(v.encode('utf-8'))
+    return '<a href="/?q=%s">%s</a>&nbsp;\
+<a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
+            vv, unichar(int(v[2:], 16)), k, vv, v)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -136,6 +147,8 @@ def index():
                 elif code:
                     dd['readings'] = unihan.get_readings_by_code_w_link(
                             code, linker=_readings_linker)
+                    dd['variants'] = unihan.get_variants_by_code_w_link(
+                            code, linker=_variants_linker)
             except:
                 dd['error'] = traceback.format_exc()
                 traceback.print_exc()
@@ -158,6 +171,13 @@ def link():
     if name == 'readings':
         try:
             for code in unihan.get_codes_by_reading(key, val):
+                ar.append(unichar(code))
+        except:
+            d['error'] = traceback.format_exc()
+            traceback.print_exc()
+    elif name == 'variants':
+        try:
+            for code in unihan.get_codes_by_variant(key, val):
                 ar.append(unichar(code))
         except:
             d['error'] = traceback.format_exc()

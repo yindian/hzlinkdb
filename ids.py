@@ -19,7 +19,7 @@ try:
                 return 3
             return 0
         except:
-            traceback.print_exc()
+            #traceback.print_exc()
             return 0
 except:
     traceback.print_exc()

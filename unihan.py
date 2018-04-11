@@ -6,6 +6,7 @@ try:
     import czipfile as zipfile
 except:
     import zipfile
+import xml.sax.saxutils
 
 _unihan_zip = zipfile.ZipFile(os.path.join(os.path.dirname(__file__),
     'unihan', 'Unihan.zip'), 'r')
@@ -69,8 +70,8 @@ def _get_data_by_code_w_link(d, code, keys=None, linker=None,
                 try:
                     q = v.index(s, p)
                     if q > p:
-                        r.append(v[p:q])
-                    if len(reverse_indices[k][s]) > 1:
+                        r.append(xml.sax.saxutils.escape(v[p:q]))
+                    if not reverse_indices or len(reverse_indices[k][s]) > 1:
                         r.append(linker(k, s))
                     else:
                         r.append(s)
@@ -79,7 +80,7 @@ def _get_data_by_code_w_link(d, code, keys=None, linker=None,
                     print >> sys.stderr, s, v[p:]
                     raise
             if p < len(v):
-                r.append(v[p:])
+                r.append(xml.sax.saxutils.escape(v[p:]))
             t[k] = ''.join(r)
     return t
 
@@ -146,6 +147,25 @@ def get_readings_by_code_w_link(code, keys=None, linker=None):
 
 def get_codes_by_reading(k, v):
     return _lookup_reverse_indices(_readings_rev_idx, k, v)
+
+_variants = _read_data('Unihan_Variants.txt')
+_pat_u_wo_less_than = re.compile(r'U\+[^<]+')
+_variants_splitter = dict(
+        kSemanticVariant = _pat_u_wo_less_than.findall,
+        kSpecializedSemanticVariant = _pat_u_wo_less_than.findall,
+        kZVariant = _pat_u_wo_less_than.findall,
+        )
+_variants_rev_idx = _build_reverse_indices(_variants, _variants_splitter)
+
+def get_variants_by_code(code, keys=None):
+    return _get_data_by_code(_variants, code, keys)
+
+def get_variants_by_code_w_link(code, keys=None, linker=None):
+    return _get_data_by_code_w_link(_variants, code, keys, linker,
+            _variants_splitter)
+
+def get_codes_by_variant(k, v):
+    return _lookup_reverse_indices(_variants_rev_idx, k, v)
 
 if __name__ == '__main__':
     pass

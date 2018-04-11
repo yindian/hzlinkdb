@@ -13,6 +13,9 @@ hr {
   border: 0px;
   height: 1px;
 }
+a {
+  text-decoration: none;
+}
 .navigation {
   border-bottom: 1px solid #AF9A87;
 }

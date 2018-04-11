@@ -33,6 +33,13 @@
       <span class="sep"> ; </span>
       {% endfor %}
     </div>
+    <div class="variants">
+      {% set variants = d.get('variants') or {} -%}
+      {% for k in variants.keys()|sort: %}
+      <span class="field"><b>{{k}}</b>:&nbsp;{{variants[k]|safe}}</span>
+      <span class="sep"> ; </span>
+      {% endfor %}
+    </div>
     &nbsp;
     <div class="error"><pre>{{d.get('error', '')}}</pre></div>
   </div>
