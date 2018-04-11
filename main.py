@@ -13,6 +13,7 @@ _start = time.clock()
 import unihan
 _end = time.clock()
 print >> sys.stderr, _end - _start, 'seconds elapsed importing unihan'
+import ids
 
 app = Flask(__name__)
 
@@ -99,7 +100,9 @@ def index():
     d['result_list'] = ar = []
     query = request.args.get('q') or request.form.get('q')
     if query:
-        for s in query_split(query):
+        qs = query_split(query)
+        for i in xrange(len(qs)):
+            s = qs[i]
             dd = {}
             ar.append(dd)
             try:
@@ -109,18 +112,38 @@ def index():
                     dd['char'] = unichar(code)
                     dd['code'] = s
                 elif s.startswith('&'):
-                    dd['char'] = ''
+                    dd['char'] = s
                     dd['code'] = s
                 else:
                     dd['char'] = s
                     code = ordinal(s)
                     dd['code'] = 'U+%04X' % (code,)
-                if code:
+                if ids.isidc(code):
+                    stk = [ids.operands(code)]
+                    j = i + 1
+                    while stk:
+                        try:
+                            t = qs[j]
+                        except IndexError:
+                            break
+                        stk[-1] -= 1
+                        if not stk[-1]:
+                            del stk[-1]
+                        if ids.isidc(t):
+                            stk.append(ids.operands(t))
+                        j += 1
+                    dd['ids'] = j
+                elif code:
                     dd['readings'] = unihan.get_readings_by_code_w_link(
                             code, linker=_readings_linker)
             except:
                 dd['error'] = traceback.format_exc()
                 traceback.print_exc()
+        for i in xrange(len(qs)):
+            dd = ar[i]
+            if dd.has_key('ids'):
+                dd['char'] = ''.join([x['char'] for x in ar[i:j]])
+                dd['code'] = ','.join([x['code'] for x in ar[i:j]])
     return render_template('index.html', **d)
 
 @app.route('/l', methods=['GET', 'POST'])
