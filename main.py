@@ -15,6 +15,7 @@ _start = time.clock()
 import unihan
 _end = time.clock()
 print >> sys.stderr, _end - _start, 'seconds elapsed importing unihan'
+import chise
 import ids
 
 app = Flask(__name__)
@@ -111,6 +112,7 @@ def index():
     d['result_list'] = ar = []
     query = request.args.get('q') or request.form.get('q')
     if query:
+        d['query'] = query
         qs = query_split(query)
         for i in xrange(len(qs)):
             s = qs[i]
@@ -123,8 +125,13 @@ def index():
                     dd['char'] = unichar(code)
                     dd['code'] = s
                 elif s.startswith('&'):
-                    dd['char'] = s
-                    dd['code'] = s
+                    try:
+                        dd['char'] = chise.imgref(s)
+                    except:
+                        traceback.print_exc()
+                        dd['char'] = s
+                    dd['code'] = '<a target="_blank" href="%s">%s</a>' % (
+                            chise.repurl(s), xml.sax.saxutils.escape(s))
                 else:
                     dd['char'] = s
                     code = ordinal(s)

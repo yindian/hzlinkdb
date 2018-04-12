@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Hanzi Link Database</title>
+<title>Hanzi Link Database{{query and ' - %s' % (query,) or ''}}</title>
 <link rel="stylesheet" type="text/css" href="/static/style.css">
 </head>
 <body>
@@ -23,8 +23,8 @@
   {% for d in result_list %}
   <div class="result">
     <div class="float_left">
-      <div class="char">{{d.get('char', '')}}</div>
-      <div class="code">{{d.get('code', '')}}</div>
+      <div class="char">{{d.get('char', '')|safe}}</div>
+      <div class="code">{{d.get('code', '')|safe}}</div>
     </div>
     <div class="readings">
       {% set readings = d.get('readings') or {} -%}

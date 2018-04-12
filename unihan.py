@@ -149,7 +149,7 @@ def get_codes_by_reading(k, v):
     return _lookup_reverse_indices(_readings_rev_idx, k, v)
 
 _variants = _read_data('Unihan_Variants.txt')
-_pat_u_wo_less_than = re.compile(r'U\+[^<]+')
+_pat_u_wo_less_than = re.compile(r'U\+[^< ]+')
 _variants_splitter = dict(
         kSemanticVariant = _pat_u_wo_less_than.findall,
         kSpecializedSemanticVariant = _pat_u_wo_less_than.findall,
