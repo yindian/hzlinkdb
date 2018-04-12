@@ -15,7 +15,10 @@ _start = time.clock()
 import unihan
 _end = time.clock()
 print >> sys.stderr, _end - _start, 'seconds elapsed importing unihan'
+_start = time.clock()
 import chise
+_end = time.clock()
+print >> sys.stderr, _end - _start, 'seconds elapsed importing chise'
 import ids
 
 app = Flask(__name__)
@@ -88,6 +91,15 @@ def query_split(s):
             else:
                 ar.append(c)
             state = 0
+    if state == 3 and ar[-1][-1] not in string.hexdigits:
+        assert len(ar[-1]) == 2
+        assert ar[-1][1] == c
+        ar[-1] = ar[-1][0]
+        ar.append(c)
+    elif state == 1:
+        s = ar[-1]
+        del ar[-1]
+        ar.extend(list(s))
     return [s for s in ar if not s.isspace()]
 
 def _readings_linker(k, v):
@@ -120,18 +132,22 @@ def index():
             ar.append(dd)
             try:
                 code = None
-                if s.startswith('U'):
+                if s.startswith(('U+', 'U-')):
                     code = int(s[2:], 16)
                     dd['char'] = unichar(code)
                     dd['code'] = s
-                elif s.startswith('&'):
+                elif s.startswith('&') and len(s) > 1:
                     try:
                         dd['char'] = chise.imgref(s)
                     except:
                         traceback.print_exc()
                         dd['char'] = s
-                    dd['code'] = '<a target="_blank" href="%s">%s</a>' % (
-                            chise.repurl(s), xml.sax.saxutils.escape(s))
+                    t = chise.repurl(s)
+                    if t:
+                        dd['code'] = '<a target="_blank" href="%s">%s</a>' % (
+                                t, xml.sax.saxutils.escape(s))
+                    else:
+                        dd['code'] = xml.sax.saxutils.escape(s)
                 else:
                     dd['char'] = s
                     code = ordinal(s)
@@ -156,12 +172,39 @@ def index():
                             code, linker=_readings_linker)
                     dd['variants'] = unihan.get_variants_by_code_w_link(
                             code, linker=_variants_linker)
+                    t = chise.ids_find_by_code(code)
+                    if t:
+                        br = query_split(t)
+                        for j in xrange(len(br)):
+                            if ids.isidc(br[j]):
+                                stk = [ids.operands(br[j])]
+                                k = j + 1
+                                while stk:
+                                    try:
+                                        t = br[k]
+                                    except IndexError:
+                                        break
+                                    stk[-1] -= 1
+                                    if not stk[-1]:
+                                        del stk[-1]
+                                    if ids.isidc(t):
+                                        stk.append(ids.operands(t))
+                                    k += 1
+                                br[j] = '<a href="/?q=%s">%s</a>' % (
+                                        xml.sax.saxutils.escape(
+                                            ''.join(br[j:k])),
+                                        br[j])
+                            else:
+                                t = xml.sax.saxutils.escape(br[j])
+                                br[j] = '<a href="/?q=%s">%s</a>' % (t, t)
+                        dd['chise_ids'] = ''.join(br)
             except:
                 dd['error'] = traceback.format_exc()
                 traceback.print_exc()
         for i in xrange(len(qs)):
             dd = ar[i]
             if dd.has_key('ids'):
+                j = dd['ids']
                 dd['char'] = ''.join([x['char'] for x in ar[i:j]])
                 dd['code'] = ','.join([x['code'] for x in ar[i:j]])
     return render_template('index.html', **d)

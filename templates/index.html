@@ -40,6 +40,11 @@
       <span class="sep"> ; </span>
       {% endfor %}
     </div>
+    <div class="chise_ids">
+      {% if d.has_key('chise_ids') -%}
+      <span class="field"><b>IDS</b>:&nbsp;{{d.chise_ids|safe}}</span>
+      {% endif %}
+    </div>
     &nbsp;
     <div class="error"><pre>{{d.get('error', '')}}</pre></div>
   </div>

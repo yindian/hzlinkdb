@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys, os
+import glob
+import struct
 import xml.sax.saxutils
 import traceback
 
@@ -635,16 +637,59 @@ def _build_entity_map(_from, _to):
             assert digits, base == t[aname][1:3]
             r[entity[:2]][entity] = t[aname]
         else:
-            r[entity[:2]][entity] = (None, None, None, None, aname)
+            r[entity[:2]][entity] = (None, digits, base, None, aname)
     return r
 
 _entity_map = _build_entity_map(
         _coded_charset_entity_reference_alist,
         _coded_charset_GlyphWiki_id_alist)
 
+def unichar(i):
+    try:
+        return unichr(i)
+    except ValueError:
+        return struct.pack('i', i).decode('utf-32')
+
+def _load_ids_ucs(directory):
+    d = {}
+    t = {}
+    for fname in glob.glob(os.path.join(directory, 'IDS-UCS*')):
+        with open(fname) as f:
+            try:
+                for line in f:
+                    if line.startswith(';'):
+                        continue
+                    line = line.rstrip().decode('utf-8')
+                    if not line:
+                        continue
+                    assert line.startswith(('U+', 'U-'))
+                    ar = line.split('\t')
+                    assert len(ar) >= 3
+                    code = int(ar[0][2:], 16)
+                    assert not d.has_key(code)
+                    if ar[1].startswith('&'):
+                        assert ar[1].endswith(';')
+                        assert not t.has_key(ar[1])
+                        t[ar[1]] = unichar(code)
+                    else:
+                        assert ar[1] == unichar(code)
+                    d[code] = ar[2]
+            except:
+                print >> sys.stderr, fname, line.encode('gb18030')
+                raise
+    return d, t
+
+_ids_ucs, _ucs_entity_map = _load_ids_ucs('ids')
+
+def ids_find_by_code(code):
+    return _ids_ucs.get(code)
+
 def imgref(entity):
     assert entity.startswith('&')
     assert entity.endswith(';')
+    s = _ucs_entity_map.get(entity)
+    if s:
+        return s
     d = _entity_map.get(entity[1:3])
     if not d:
         return xml.sax.saxutils.escape(entity)
@@ -663,7 +708,7 @@ def imgref(entity):
     s = s % (n,)
     t = ('<img alt="%s" src="http://glyphwiki.org/glyph/%s.svg" style="'
             'vertical-align: -0.1em; width: 1em;"/>'
-            ) % (xml.sax.saxutils.quoteattr(entity), s)
+            ) % (xml.sax.saxutils.escape(entity), s)
     return '<a target="_blank" href="http://glyphwiki.org/wiki/%s">%s</a>' % (
             s, t)
 
@@ -686,7 +731,6 @@ def repurl(entity):
     n = int(entity[1 + keylen:-1], base)
     return 'http://www.chise.org/est/view/character/rep.%s:%s' % (
             aname, base == 10 and str(n) or hex(n))
-
 
 if __name__ == '__main__':
     a = set([x[0] for x in _coded_charset_entity_reference_alist])
