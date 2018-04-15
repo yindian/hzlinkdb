@@ -110,6 +110,12 @@ def _readings_linker(k, v):
 
 def _variants_linker(k, v):
     vv = urllib.quote(v.encode('utf-8'))
+    if k == 'kRSUnicode':
+        radical = int(v[:v.index('.')].rstrip("'"), 10) - 1
+        assert 0 <= radical < 214
+        return '<span class="radical">%s</span>&nbsp;\
+<a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
+            unichr(0x2F00 + radical), k, vv, v)
     return '<a href="/?q=%s">%s</a>&nbsp;\
 <a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
             vv, unichar(int(v[2:], 16)), k, vv, v)
