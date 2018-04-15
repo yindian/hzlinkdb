@@ -138,6 +138,12 @@ _readings_splitter = dict(
         kHanyuPinyin = _split_hanyu_pinyin,
         kXHC1983 = _split_hanyu_pinyin,
         )
+if True:
+    _read_data('Unihan_DictionaryIndices.txt', set([
+        'kGSR',
+        ]), _readings)
+    _pat_find_4_digits = re.compile(r'\d{4}')
+    _readings_splitter['kGSR'] = _pat_find_4_digits.findall
 _readings_rev_idx = _build_reverse_indices(_readings, _readings_splitter)
 
 def get_readings_by_code(code, keys=None):
@@ -153,13 +159,16 @@ def get_codes_by_reading(k, v):
 _variants = _read_data('Unihan_Variants.txt')
 _read_data('Unihan_IRGSources.txt', set([
     'kCompatibilityVariant',
+    'kIICore',
     'kRSUnicode',
     ]), _variants)
 _pat_u_wo_less_than = re.compile(r'U\+[^< ]+')
+_pat_ABC = re.compile(r'[ABC]')
 _variants_splitter = dict(
         kSemanticVariant = _pat_u_wo_less_than.findall,
         kSpecializedSemanticVariant = _pat_u_wo_less_than.findall,
         kZVariant = _pat_u_wo_less_than.findall,
+        kIICore = _pat_ABC.findall,
         )
 _variants_rev_idx = _build_reverse_indices(_variants, _variants_splitter)
 

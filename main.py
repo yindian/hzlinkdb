@@ -116,6 +116,8 @@ def _variants_linker(k, v):
         return '<span class="radical">%s</span>&nbsp;\
 <a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
             unichr(0x2F00 + radical), k, vv, v)
+    elif k == 'kIICore':
+        return '<a href="/l?n=variants&k=%s&v=%s">%s</a>' % (k, vv, v)
     return '<a href="/?q=%s">%s</a>&nbsp;\
 <a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
             vv, unichar(int(v[2:], 16)), k, vv, v)
