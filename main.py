@@ -226,20 +226,20 @@ def link():
     key = request.args.get('k') or request.form.get('k')
     val = request.args.get('v') or request.form.get('v')
     d['key'], d['val'] = key, val
+    n = 0
     if name == 'readings':
-        try:
-            for code in unihan.get_codes_by_reading(key, val):
-                ar.append(unichar(code))
-        except:
-            d['error'] = traceback.format_exc()
-            traceback.print_exc()
+        repo = unihan.get_codes_by_reading(key, val)
     elif name == 'variants':
+        repo = unihan.get_codes_by_variant(key, val)
+    if True:
         try:
-            for code in unihan.get_codes_by_variant(key, val):
+            for code in repo:
                 ar.append(unichar(code))
+                n += 1
         except:
             d['error'] = traceback.format_exc()
             traceback.print_exc()
+    d['cnt'] = n
     return render_template('link.html', **d)
 
 if __name__ == '__main__':

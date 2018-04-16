@@ -116,7 +116,7 @@ def _lookup_reverse_indices(d, k, v):
         print >> sys.stderr, k
         raise
     try:
-        return t[v]
+        return sorted(t[v])
     except:
         print >> sys.stderr, v
         raise
@@ -144,6 +144,12 @@ if True:
         ]), _readings)
     _pat_find_4_digits = re.compile(r'\d{4}')
     _readings_splitter['kGSR'] = _pat_find_4_digits.findall
+    if True:
+        _read_data('Unihan_DictionaryLikeData.txt', set([
+            'kFenn',
+            ]), _readings)
+        _pat_fenn = re.compile(r'\d+|[A-KP*]')
+        _readings_splitter['kFenn'] = _pat_fenn.findall
 _readings_rev_idx = _build_reverse_indices(_readings, _readings_splitter)
 
 def get_readings_by_code(code, keys=None):
@@ -163,12 +169,12 @@ _read_data('Unihan_IRGSources.txt', set([
     'kRSUnicode',
     ]), _variants)
 _pat_u_wo_less_than = re.compile(r'U\+[^< ]+')
-_pat_ABC = re.compile(r'[ABC]')
+_pat_ABC_GHJKMPT = re.compile(r'[ABCGHJKMPT]')
 _variants_splitter = dict(
         kSemanticVariant = _pat_u_wo_less_than.findall,
         kSpecializedSemanticVariant = _pat_u_wo_less_than.findall,
         kZVariant = _pat_u_wo_less_than.findall,
-        kIICore = _pat_ABC.findall,
+        kIICore = _pat_ABC_GHJKMPT.findall,
         )
 _variants_rev_idx = _build_reverse_indices(_variants, _variants_splitter)
 
