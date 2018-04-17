@@ -102,6 +102,11 @@ def query_split(s):
         ar.extend(list(s))
     return [s for s in ar if not s.isspace()]
 
+def url_quote(v):
+    if type(v) == unicode:
+        v = v.encode('utf-8')
+    return urllib.quote(v)
+
 def _readings_linker(k, v):
     return '<a href="/l?n=readings&k=%s&v=%s">%s</a>' % (
             k,
@@ -175,12 +180,20 @@ def index():
                             stk.append(ids.operands(t))
                         j += 1
                     dd['ids'] = j
+                    t = None
                 elif code:
                     dd['readings'] = unihan.get_readings_by_code_w_link(
                             code, linker=_readings_linker)
                     dd['variants'] = unihan.get_variants_by_code_w_link(
                             code, linker=_variants_linker)
                     t = chise.ids_find_by_code(code)
+                    if not t:
+                        t = chise.ids_find_by_entity(s)
+                    if t:
+                        dd['chise_ids_find'] = chise.ids_find_url(code)
+                else:
+                    t = chise.ids_find_by_entity(s)
+                if t is not None:
                     if t:
                         br = query_split(t)
                         for j in xrange(len(br)):
@@ -199,12 +212,13 @@ def index():
                                         stk.append(ids.operands(t))
                                     k += 1
                                 br[j] = '<a href="/?q=%s">%s</a>' % (
-                                        xml.sax.saxutils.escape(
+                                        url_quote(
                                             ''.join(br[j:k])),
                                         br[j])
                             else:
                                 t = xml.sax.saxutils.escape(br[j])
-                                br[j] = '<a href="/?q=%s">%s</a>' % (t, t)
+                                br[j] = '<a href="/?q=%s">%s</a>' % (
+                                        url_quote(br[j]), t)
                         dd['chise_ids'] = ''.join(br)
             except:
                 dd['error'] = traceback.format_exc()

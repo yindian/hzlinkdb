@@ -42,7 +42,12 @@
     </div>
     <div class="chise_ids">
       {% if d.has_key('chise_ids') -%}
+      {% if d.get('chise_ids_find') -%}
+      <span class="field"><b><a target="_blank" href="{{d.chise_ids_find
+            }}">IDS</a></b>:&nbsp;{{d.chise_ids|safe}}</span>
+      {% else %}
       <span class="field"><b>IDS</b>:&nbsp;{{d.chise_ids|safe}}</span>
+      {% endif %}
       {% endif %}
     </div>
     &nbsp;

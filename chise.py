@@ -4,6 +4,7 @@ import sys, os
 import glob
 import struct
 import xml.sax.saxutils
+import urllib
 import traceback
 
 # Cf. xemacs-chise/lisp/mule/mule-coding.el
@@ -684,6 +685,47 @@ _ids_ucs, _ucs_entity_map = _load_ids_ucs('ids')
 def ids_find_by_code(code):
     return _ids_ucs.get(code)
 
+def _load_ids_non_ucs(directory):
+    d = {}
+    for fname in glob.glob(os.path.join(directory, 'IDS*.txt')):
+        if os.path.basename(fname).startswith('IDS-UCS'):
+            continue
+        with open(fname) as f:
+            try:
+                for line in f:
+                    if line.startswith(';'):
+                        continue
+                    line = line.rstrip().decode('utf-8')
+                    if not line:
+                        continue
+                    ar = line.split('\t')
+                    if len(ar) < 3:
+                        continue
+                    if ar[1].startswith('&'):
+                        assert ar[1].endswith(';')
+                        if not d.has_key(ar[1]) or d[ar[1]] == ar[1]:
+                            d[ar[1]] = ar[2]
+                        elif d[ar[1]].count('&') > ar[2].count('&'):
+                            d[ar[1]] = ar[2]
+                        else:
+                            #assert d[ar[1]] == ar[2]
+                            pass
+                    else:
+                        if not d.has_key(ar[1]) or d[ar[1]] == ar[1]:
+                            d[ar[1]] = ar[2]
+                        else:
+                            #assert d[ar[1]] == ar[2]
+                            pass
+            except:
+                print >> sys.stderr, fname, line.encode('gb18030')
+                raise
+    return d
+
+_ids_non_ucs = _load_ids_non_ucs('ids')
+
+def ids_find_by_entity(entity):
+    return _ids_non_ucs.get(entity)
+
 def imgref(entity):
     assert entity.startswith('&')
     assert entity.endswith(';')
@@ -731,6 +773,14 @@ def repurl(entity):
     n = int(entity[1 + keylen:-1], base)
     return 'http://www.chise.org/est/view/character/rep.%s:%s' % (
             aname, base == 10 and str(n) or hex(n))
+
+def ids_find_url(s):
+    if type(s) != str:
+        if type(s) == unicode:
+            s = s.encode('utf-8')
+        else:
+            s = unichar(s).encode('utf-8')
+    return 'http://www.chise.org/ids-find?components=' + urllib.quote(s)
 
 if __name__ == '__main__':
     a = set([x[0] for x in _coded_charset_entity_reference_alist])
