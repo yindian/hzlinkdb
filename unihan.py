@@ -16,6 +16,23 @@ def _read_data(fname, fields=set(), d=None):
     if f:
         if d is None:
             d = {}
+        if len(fields) == 1:
+            s = list(fields)[0]
+            t = '\t' + s + '\t'
+            tl = len(t)
+            buf = f.read()
+            p = buf.find(t)
+            q = 0
+            while p > 0:
+                q = buf.rindex('\n', q, p)
+                assert buf.startswith('U+', q + 1)
+                code = int(buf[q+3:p], 16)
+                p += tl
+                q = buf.find('\n', p)
+                d.setdefault(code, {})[s] = buf[p:q].decode('utf-8')
+                p = buf.find(t, q)
+            f.close()
+            return d
         for line in f:
             if line.startswith('#'):
                 continue
