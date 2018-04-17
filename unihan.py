@@ -33,10 +33,10 @@ def _read_data(fname, fields=set(), d=None):
                 p = buf.find(t, q)
             f.close()
             return d
-        for line in f:
+        for line in f.read().splitlines():
             if line.startswith('#'):
                 continue
-            if line == '\n':
+            if not line:
                 continue
             assert line.startswith('U+')
             ar = line.split('\t')
@@ -45,7 +45,7 @@ def _read_data(fname, fields=set(), d=None):
                 continue
             code = int(ar[0][2:], 16)
             t = d.setdefault(code, {})
-            t[ar[1]] = ar[2].rstrip().decode('utf-8')
+            t[ar[1]] = ar[2].decode('utf-8')
         f.close()
         return d
 
