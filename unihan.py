@@ -102,7 +102,7 @@ def _default_linker(k, v):
     return '<a href="/l?k=%s&v=%s">%s</a>' % (k, v, v)
 
 def _get_data_by_code_w_link(d, code, keys=None, linker=None,
-        splitter={}, reverse_indices={}):
+        splitter={}, reverse_indices={}, transformer={}):
     if not linker:
         linker = _default_linker
     t = _get_data_by_code(d, code, keys)
@@ -122,7 +122,12 @@ def _get_data_by_code_w_link(d, code, keys=None, linker=None,
                     q = v.index(s, p)
                     if q > p:
                         r.append(xml.sax.saxutils.escape(v[p:q]))
-                    if not reverse_indices or len(reverse_indices[k][s]) > 1:
+                    if reverse_indices and transformer.has_key(k):
+                        f = transformer[k]
+                        r.append(linker(k, f(s)))
+                        r.append('&nbsp;')
+                        r.append(s)
+                    elif not reverse_indices or len(reverse_indices[k][s]) > 1:
                         r.append(linker(k, s))
                     else:
                         r.append(s)
@@ -135,7 +140,8 @@ def _get_data_by_code_w_link(d, code, keys=None, linker=None,
             t[k] = ''.join(r)
     return t
 
-def _build_reverse_indices(d, splitter={}, fields=set()):
+def _build_reverse_indices(d, splitter={}, fields=set(), transformer={}):
+    assert type(fields) == set
     r = {}
     for code, t in d.iteritems():
         for k, v in t.iteritems():
@@ -151,7 +157,18 @@ def _build_reverse_indices(d, splitter={}, fields=set()):
             except:
                 print >> sys.stderr, f, v
                 raise
+            if transformer.has_key(k):
+                f = transformer[k]
+            else:
+                f = None
             for s in ar:
+                if f:
+                    try:
+                        s = f(s)
+                        assert s
+                    except:
+                        print >> sys.stderr, k, f, s
+                        raise
                 try:
                     dd[s].add(code)
                 except KeyError: 
@@ -187,26 +204,32 @@ _readings_splitter = dict(
         kHanyuPinyin = _split_hanyu_pinyin,
         kXHC1983 = _split_hanyu_pinyin,
         )
+_readings_transformer = {}
 if True:
     _read_data('Unihan_DictionaryIndices.txt', set([
         'kGSR',
+        'kSBGY',
         ]), _readings)
     _pat_find_4_digits = re.compile(r'\d{4}')
     _readings_splitter['kGSR'] = _pat_find_4_digits.findall
+    import sbgy
+    sbgy.init_data(_readings, 'kSBGY')
+    _readings_transformer['kSBGY'] = sbgy.pos2rhyme
     if True:
         _read_data('Unihan_DictionaryLikeData.txt', set([
             'kFenn',
             ]), _readings)
         _pat_fenn = re.compile(r'\d+|[A-KP*]')
         _readings_splitter['kFenn'] = _pat_fenn.findall
-_readings_rev_idx = _build_reverse_indices(_readings, _readings_splitter)
+_readings_rev_idx = _build_reverse_indices(_readings, _readings_splitter,
+        transformer=_readings_transformer)
 
 def get_readings_by_code(code, keys=None):
     return _get_data_by_code(_readings, code, keys)
 
 def get_readings_by_code_w_link(code, keys=None, linker=None):
     return _get_data_by_code_w_link(_readings, code, keys, linker,
-            _readings_splitter, _readings_rev_idx)
+            _readings_splitter, _readings_rev_idx, _readings_transformer)
 
 def get_codes_by_reading(k, v):
     return _lookup_reverse_indices(_readings_rev_idx, k, v)
