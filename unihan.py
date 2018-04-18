@@ -16,7 +16,7 @@ def _read_data(fname, fields=set(), d=None):
     if f:
         if d is None:
             d = {}
-        if len(fields) == 1:
+        if 1 <= len(fields) <= 3:
             s = list(fields)[0]
             t = '\t' + s + '\t'
             tl = len(t)
@@ -32,6 +32,38 @@ def _read_data(fname, fields=set(), d=None):
                 d.setdefault(code, {})[s] = buf[p:q].decode('utf-8')
                 p = buf.find(t, q)
             f.close()
+            if len(fields) == 1:
+                return d
+        if 2 <= len(fields) <= 3:
+            s = list(fields)[1]
+            t = '\t' + s + '\t'
+            tl = len(t)
+            p = buf.find(t)
+            q = 0
+            while p > 0:
+                q = buf.rindex('\n', q, p)
+                assert buf.startswith('U+', q + 1)
+                code = int(buf[q+3:p], 16)
+                p += tl
+                q = buf.find('\n', p)
+                d.setdefault(code, {})[s] = buf[p:q].decode('utf-8')
+                p = buf.find(t, q)
+            if len(fields) == 2:
+                return d
+        if len(fields) == 3:
+            s = list(fields)[2]
+            t = '\t' + s + '\t'
+            tl = len(t)
+            p = buf.find(t)
+            q = 0
+            while p > 0:
+                q = buf.rindex('\n', q, p)
+                assert buf.startswith('U+', q + 1)
+                code = int(buf[q+3:p], 16)
+                p += tl
+                q = buf.find('\n', p)
+                d.setdefault(code, {})[s] = buf[p:q].decode('utf-8')
+                p = buf.find(t, q)
             return d
         for line in f.read().splitlines():
             if line.startswith('#'):
