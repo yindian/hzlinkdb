@@ -28,15 +28,17 @@
     </div>
     <div class="readings">
       {% set readings = d.get('readings') or {} -%}
+      {% set l = readings_key_linker -%}
       {% for k in readings.keys()|sort: %}
-      <span class="field"><b>{{k}}</b>:&nbsp;{{readings[k]|safe}}</span>
+      <span class="field"><b>{{l(k)|safe}}</b>:&nbsp;{{readings[k]|safe}}</span>
       <span class="sep"> ; </span>
       {% endfor %}
     </div>
     <div class="variants">
       {% set variants = d.get('variants') or {} -%}
+      {% set l = variants_key_linker -%}
       {% for k in variants.keys()|sort: %}
-      <span class="field"><b>{{k}}</b>:&nbsp;{{variants[k]|safe}}</span>
+      <span class="field"><b>{{l(k)|safe}}</b>:&nbsp;{{variants[k]|safe}}</span>
       <span class="sep"> ; </span>
       {% endfor %}
     </div>

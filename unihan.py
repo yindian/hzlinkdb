@@ -187,6 +187,14 @@ def _lookup_reverse_indices(d, k, v):
         print >> sys.stderr, v
         raise
 
+def _list_reverse_indices_values(d, k, sort_key={}):
+    try:
+        t = d[k]
+        return sorted(t.keys(), key=sort_key.get(k))
+    except:
+        print >> sys.stderr, k
+        raise
+
 _readings = _read_data('Unihan_Readings.txt')
 _pat_semicolon_comma_space = re.compile(r'[;,] *')
 _pat_remove_paren_digits = re.compile(r'(\S+)\(\d+\)')
@@ -205,6 +213,40 @@ _readings_splitter = dict(
         kXHC1983 = _split_hanyu_pinyin,
         )
 _readings_transformer = {}
+_readings_value_sort_key = {}
+try:
+    import icu
+    loc_zh = icu.Locale.getChina()
+    col_zh = icu.Collator.createInstance(loc_zh)
+    loc_vi = icu.Locale('vi')
+    col_vi = icu.Collator.createInstance(loc_vi)
+    _readings_value_sort_key.update(dict(
+        kHanyuPinlu = col_zh.getSortKey,
+        kHanyuPinyin = col_zh.getSortKey,
+        kMandarin = col_zh.getSortKey,
+        kTang = col_zh.getSortKey,
+        kVietnamese = col_vi.getSortKey,
+        kXHC1983 = col_zh.getSortKey,
+        ))
+except:
+    traceback.print_exc()
+    pass
+def _numeric_sort(s):
+    try:
+        return int(s)
+    except:
+        return s
+_pat_number = re.compile(r'[+-]?\d+')
+def _multi_numeric_sort(s):
+    try:
+        return map(int, _pat_number.findall(s)) + _pat_number.split(s)
+    except:
+        return [s]
+def _unicode_point_sort(s):
+    try:
+        return int(s[2:], 16)
+    except:
+        return s
 if True:
     _read_data('Unihan_DictionaryIndices.txt', set([
         'kGSR',
@@ -215,12 +257,14 @@ if True:
     import sbgy
     sbgy.init_data(_readings, 'kSBGY')
     _readings_transformer['kSBGY'] = sbgy.pos2rhyme
+    _readings_value_sort_key['kSBGY'] = sbgy.rhyme_index
     if True:
         _read_data('Unihan_DictionaryLikeData.txt', set([
             'kFenn',
             ]), _readings)
         _pat_fenn = re.compile(r'\d+|[A-KP*]')
         _readings_splitter['kFenn'] = _pat_fenn.findall
+        _readings_value_sort_key['kFenn'] = _numeric_sort
 _readings_rev_idx = _build_reverse_indices(_readings, _readings_splitter,
         transformer=_readings_transformer)
 
@@ -233,6 +277,10 @@ def get_readings_by_code_w_link(code, keys=None, linker=None):
 
 def get_codes_by_reading(k, v):
     return _lookup_reverse_indices(_readings_rev_idx, k, v)
+
+def get_values_of_reading(k):
+    return _list_reverse_indices_values(_readings_rev_idx,
+            k, _readings_value_sort_key)
 
 _variants = _read_data('Unihan_Variants.txt')
 _read_data('Unihan_IRGSources.txt', set([
@@ -248,6 +296,15 @@ _variants_splitter = dict(
         kZVariant = _pat_u_wo_less_than.findall,
         kIICore = _pat_ABC_GHJKMPT.findall,
         )
+_variants_value_sort_key = dict(
+        kRSUnicode = _multi_numeric_sort,
+        kCompatibilityVariant = _unicode_point_sort,
+        kSemanticVariant = _unicode_point_sort,
+        kSimplifiedVariant = _unicode_point_sort,
+        kSpecializedSemanticVariant = _unicode_point_sort,
+        kTraditionalVariant = _unicode_point_sort,
+        kZVariant = _unicode_point_sort,
+        )
 _variants_rev_idx = _build_reverse_indices(_variants, _variants_splitter)
 
 def get_variants_by_code(code, keys=None):
@@ -259,6 +316,10 @@ def get_variants_by_code_w_link(code, keys=None, linker=None):
 
 def get_codes_by_variant(k, v):
     return _lookup_reverse_indices(_variants_rev_idx, k, v)
+
+def get_values_of_variant(k):
+    return _list_reverse_indices_values(_variants_rev_idx,
+            k, _variants_value_sort_key)
 
 if __name__ == '__main__':
     pass

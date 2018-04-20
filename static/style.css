@@ -1,5 +1,6 @@
 body {
   font-family: Linux Libertine Display O, DejaVu Serif,
+  Cambria,
   SimSun, SimSun-ExtB, 宋体
   , 思源宋体, Source Han Serif SC
   , TH-Tshyn-P0, TH-Tshyn-P1, TH-Tshyn-P2
@@ -16,6 +17,7 @@ hr {
 a {
   text-decoration: none;
   word-break: keep-all;
+  white-space: nowrap;
 }
 .navigation {
   border-bottom: 1px solid #AF9A87;
@@ -48,5 +50,8 @@ a {
 }
 .char {
   font-size: xx-large;
+}
+.field b a {
+  color: WindowText;
 }
 /* vim: set ts=2 sw=2 et tw=80 cc=80 : */

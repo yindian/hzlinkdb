@@ -107,11 +107,23 @@ def url_quote(v):
         v = v.encode('utf-8')
     return urllib.quote(v)
 
+def unicode_value(s):
+    return 'U+%04X' % (ordinal(s),)
+
+def url_quoted_unicode_value(s):
+    return urllib.quote(unicode_value(s))
+
 def _readings_linker(k, v):
     return '<a href="/l?n=readings&k=%s&v=%s">%s</a>' % (
             k,
             urllib.quote(v.encode('utf-8')),
             xml.sax.saxutils.escape(v))
+
+def _readings_key_linker(k):
+    return '<a href="/kv?n=readings&k=%s">%s</a>' % (k, k)
+
+def _variants_key_linker(k):
+    return '<a href="/kv?n=variants&k=%s">%s</a>' % (k, k)
 
 def _variants_linker(k, v):
     vv = urllib.quote(v.encode('utf-8'))
@@ -229,6 +241,8 @@ def index():
                 j = dd['ids']
                 dd['char'] = ''.join([x['char'] for x in ar[i:j]])
                 dd['code'] = ','.join([x['code'] for x in ar[i:j]])
+        d['readings_key_linker'] = _readings_key_linker
+        d['variants_key_linker'] = _variants_key_linker
     return render_template('index.html', **d)
 
 @app.route('/l', methods=['GET', 'POST'])
@@ -240,11 +254,14 @@ def link():
     key = request.args.get('k') or request.form.get('k')
     val = request.args.get('v') or request.form.get('v')
     d['key'], d['val'] = key, val
+    d['klnk'] = str
     n = 0
     if name == 'readings':
         repo = unihan.get_codes_by_reading(key, val)
+        d['klnk'] = _readings_key_linker
     elif name == 'variants':
         repo = unihan.get_codes_by_variant(key, val)
+        d['klnk'] = _variants_key_linker
     if True:
         try:
             for code in repo:
@@ -255,6 +272,34 @@ def link():
             traceback.print_exc()
     d['cnt'] = n
     return render_template('link.html', **d)
+
+@app.route('/kv', methods=['GET', 'POST'])
+def keyvalues():
+    db = get_db()
+    d = {}
+    d['result_list'] = ar = []
+    name = request.args.get('n') or request.form.get('n')
+    key = request.args.get('k') or request.form.get('k')
+    d['name'] = name
+    d['key'] = key
+    d['quote'] = url_quote
+    n = 0
+    try:
+        if name == 'readings':
+            values = unihan.get_values_of_reading(key)
+        elif name == 'variants':
+            values = unihan.get_values_of_variant(key)
+            if key.endswith('Variant'):
+                values = [unichar(int(v[2:], 16)) for v in values]
+                d['quote'] = url_quoted_unicode_value
+        for s in values:
+            ar.append(s)
+            n += 1
+    except:
+        d['error'] = traceback.format_exc()
+        traceback.print_exc()
+    d['cnt'] = n
+    return render_template('keyvalues.html', **d)
 
 if __name__ == '__main__':
     from gevent.wsgi import WSGIServer

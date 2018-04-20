@@ -64,6 +64,7 @@ def init_data(d, k):
         except:
             print >> sys.stderr, code, unichr(code)
             raise
+    suspect = []
     for rhyme in _rhyme_list:
         code = ord(rhyme[-1])
         try:
@@ -72,6 +73,7 @@ def init_data(d, k):
             if len(ar) == 1:
                 v = ar[0]
             else:
+                suspect.append(rhyme[-1])
                 ar.sort()
                 v = ar[0]
                 if r:
@@ -85,6 +87,7 @@ def init_data(d, k):
         except:
             print >> sys.stderr, code, unichr(code)
             raise
+    #print u''.join(suspect)
     assert len(_rhyme_start_pos) == len(_rhyme_list)
     pat = re.compile(r'\d+')
     for i in xrange(len(_rhyme_list)):
@@ -110,5 +113,8 @@ def pos2rhyme(s):
     i = bisect.bisect(_rhyme_start_pos, v)
     assert i > 0
     return _rhyme_list[i - 1]
+
+def rhyme_index(s):
+    return _rhyme_list.index(s)
 
 # vim:ts=4:sw=4:et:ai:cc=80

@@ -2,16 +2,16 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Hanzi Link Database - {{key}}: {{val}}</title>
+<title>Hanzi Link Database - {{key}}</title>
 <link rel="stylesheet" type="text/css" href="/static/style.css">
 </head>
 <body style="font-size: xx-large;">
   <div class="navigation">
-    <span class="field"><b>{{klnk(key)|safe}}</b>:&nbsp;{{val}}</span> ({{cnt}})
+    <span class="field"><b>{{key}}</b>:</span> ({{cnt}})
   </div>
   <div class="result">
     {% for s in result_list %}
-    <a href="/?q={{s}}">{{s}}</a>
+    <a href="/l?n={{name}}&k={{key}}&v={{quote(s)}}">{{s}}</a>
     {% endfor %}
     <div class="error"><pre>{{error}}</pre></div>
   </div>
