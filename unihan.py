@@ -7,6 +7,13 @@ try:
 except:
     import zipfile
 import xml.sax.saxutils
+import struct
+
+def unichar(i):
+    try:
+        return unichr(i)
+    except ValueError:
+        return struct.pack('i', i).decode('utf-32')
 
 _unihan_zip = zipfile.ZipFile(os.path.join(os.path.dirname(__file__),
     'unihan', 'Unihan.zip'), 'r')
@@ -175,13 +182,15 @@ def _build_reverse_indices(d, splitter={}, fields=set(), transformer={}):
                     dd[s] = set([code])
     return r
 
-def _lookup_reverse_indices(d, k, v):
+def _lookup_reverse_indices(d, k, v, idx={}, sort_key_factory={}):
     try:
         t = d[k]
     except:
         print >> sys.stderr, k
         raise
     try:
+        if sort_key_factory.has_key(k):
+            return sorted(t[v], key=sort_key_factory[k](idx, k, v))
         return sorted(t[v])
     except:
         print >> sys.stderr, v
@@ -214,6 +223,7 @@ _readings_splitter = dict(
         )
 _readings_transformer = {}
 _readings_value_sort_key = {}
+_readings_code_sort_key_factory = {}
 try:
     import icu
     loc_zh = icu.Locale.getChina()
@@ -228,8 +238,47 @@ try:
         kVietnamese = col_vi.getSortKey,
         kXHC1983 = col_zh.getSortKey,
         ))
+    loc_zh_strk = icu.Locale.createFromName('zh@collation=stroke')
+    col_zh_strk = icu.Collator.createInstance(loc_zh_strk)
+    def _get_strokes_sort_key_by_code(code):
+        return col_zh_strk.getSortKey(unichar(code))
+    def _sort_code_by_strokes_factory(d, k, v):
+        return _get_strokes_sort_key_by_code
+    def _hanyu_pinlu_sort_key_factory(d, k, v):
+        v += '('
+        def _sort_key(code):
+            for s in d[code][k].split():
+                if s.startswith(v):
+                    return -int(s[len(v):-1])
+            assert False
+        return _sort_key
+    def _hanyu_pinyin_sort_key_factory(d, k, v):
+        if v.isdigit():
+            v += '.'
+            def _sort_key(code):
+                for s in d[code][k].split():
+                    for t in s[:s.index(':')].split(','):
+                        if t.startswith(v):
+                            return t
+                assert False
+            return _sort_key
+        def _sort_key(code):
+            for s in d[code][k].split():
+                a, b = s.split(':')
+                for t in b.split(','):
+                    if t == v:
+                        return a.split(',')[0]
+            assert False
+        return _sort_key
+    _readings_code_sort_key_factory.update(dict(
+        kHanyuPinlu = _hanyu_pinlu_sort_key_factory,
+        kHanyuPinyin= _hanyu_pinyin_sort_key_factory,
+        kXHC1983    = _hanyu_pinyin_sort_key_factory,
+        ))
 except:
     traceback.print_exc()
+    def _sort_code_by_strokes_factory(d, k, v):
+        return lambda code: code
     pass
 def _numeric_sort(s):
     try:
@@ -254,10 +303,22 @@ if True:
         ]), _readings)
     _pat_find_4_digits = re.compile(r'\d{4}')
     _readings_splitter['kGSR'] = _pat_find_4_digits.findall
+    def _gsr_sort_key_factory(d, k, v):
+        def _sort_key(code):
+            for s in d[code][k].split():
+                if s.startswith(v):
+                    n = string.ascii_lowercase.index(s[4])
+                    if len(s) > 5:
+                        n += 26
+                    return n
+            assert False
+        return _sort_key
+    _readings_code_sort_key_factory['kGSR'] = _gsr_sort_key_factory
     import sbgy
     sbgy.init_data(_readings, 'kSBGY')
     _readings_transformer['kSBGY'] = sbgy.pos2rhyme
     _readings_value_sort_key['kSBGY'] = sbgy.rhyme_index
+    _readings_code_sort_key_factory['kSBGY'] = sbgy.code_sort_key_factory
     if True:
         _read_data('Unihan_DictionaryLikeData.txt', set([
             'kFenn',
@@ -265,6 +326,7 @@ if True:
         _pat_fenn = re.compile(r'\d+|[A-KP*]')
         _readings_splitter['kFenn'] = _pat_fenn.findall
         _readings_value_sort_key['kFenn'] = _numeric_sort
+        _readings_code_sort_key_factory['kFenn'] = _sort_code_by_strokes_factory
 _readings_rev_idx = _build_reverse_indices(_readings, _readings_splitter,
         transformer=_readings_transformer)
 
@@ -276,7 +338,8 @@ def get_readings_by_code_w_link(code, keys=None, linker=None):
             _readings_splitter, _readings_rev_idx, _readings_transformer)
 
 def get_codes_by_reading(k, v):
-    return _lookup_reverse_indices(_readings_rev_idx, k, v)
+    return _lookup_reverse_indices(_readings_rev_idx, k, v,
+            _readings, _readings_code_sort_key_factory)
 
 def get_values_of_reading(k):
     return _list_reverse_indices_values(_readings_rev_idx,
@@ -305,6 +368,17 @@ _variants_value_sort_key = dict(
         kTraditionalVariant = _unicode_point_sort,
         kZVariant = _unicode_point_sort,
         )
+_variants_code_sort_key_factory = {}
+def _iicore_sort_key_factory(d, k, v):
+    def _sort_key(code):
+        for s in d[code][k].split():
+            if s.find(v) >= 0:
+                n = string.ascii_uppercase.index(s[0]) * 10
+                n -= len(s)
+                return (n, code)
+        assert False
+    return _sort_key
+_variants_code_sort_key_factory['kIICore'] = _iicore_sort_key_factory
 _variants_rev_idx = _build_reverse_indices(_variants, _variants_splitter)
 
 def get_variants_by_code(code, keys=None):
@@ -315,7 +389,8 @@ def get_variants_by_code_w_link(code, keys=None, linker=None):
             _variants_splitter)
 
 def get_codes_by_variant(k, v):
-    return _lookup_reverse_indices(_variants_rev_idx, k, v)
+    return _lookup_reverse_indices(_variants_rev_idx, k, v,
+            _variants, _variants_code_sort_key_factory)
 
 def get_values_of_variant(k):
     return _list_reverse_indices_values(_variants_rev_idx,

@@ -117,4 +117,11 @@ def pos2rhyme(s):
 def rhyme_index(s):
     return _rhyme_list.index(s)
 
+def code_sort_key_factory(d, k, v):
+    def _sort_key(code):
+        for s in d[code][k].split():
+            if pos2rhyme(s) == v:
+                return _pos2int(s)
+        assert False
+    return _sort_key
 # vim:ts=4:sw=4:et:ai:cc=80
