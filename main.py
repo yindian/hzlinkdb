@@ -20,6 +20,10 @@ import chise
 _end = time.clock()
 print >> sys.stderr, _end - _start, 'seconds elapsed importing chise'
 import ids
+_start = time.clock()
+import cjkvi
+_end = time.clock()
+print >> sys.stderr, _end - _start, 'seconds elapsed importing cjkvi'
 
 app = Flask(__name__)
 
@@ -139,6 +143,9 @@ def _variants_linker(k, v):
 <a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
             vv, unichar(int(v[2:], 16)), k, vv, v)
 
+def _query_linker(s):
+    return '<a href="/?q=%s">%s</a>' % (url_quote(s), s)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = get_db()
@@ -198,6 +205,9 @@ def index():
                             code, linker=_readings_linker)
                     dd['variants'] = unihan.get_variants_by_code_w_link(
                             code, linker=_variants_linker)
+                    t = cjkvi.get_analysis(code, _query_linker)
+                    if t:
+                        dd['cjkvi_analysis'] = t
                     t = chise.ids_find_by_code(code)
                     if not t:
                         t = chise.ids_find_by_entity(s)

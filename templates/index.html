@@ -42,7 +42,8 @@
       <span class="sep"> ; </span>
       {% endfor %}
     </div>
-    <div class="chise_ids">
+    <div class="ids">
+    <span class="chise_ids">
       {% if d.has_key('chise_ids') -%}
       {% if d.get('chise_ids_find') -%}
       <span class="field"><b><a target="_blank" href="{{d.chise_ids_find
@@ -51,6 +52,12 @@
       <span class="field"><b>IDS</b>:&nbsp;{{d.chise_ids|safe}}</span>
       {% endif %}
       {% endif %}
+    </span>
+    <span class="cjkvi_analysis">
+      {% if d.has_key('cjkvi_analysis') -%}
+      <span class="field"><b>Analysis</b>:&nbsp;{{d.cjkvi_analysis|safe}}</span>
+      {% endif %}
+    </span>
     </div>
     &nbsp;
     <div class="error"><pre>{{d.get('error', '')}}</pre></div>
