@@ -208,6 +208,9 @@ def index():
                     t = cjkvi.get_analysis(code, _query_linker)
                     if t:
                         dd['cjkvi_analysis'] = t
+                    t = cjkvi.get_variants(code, _query_linker)
+                    if t:
+                        dd['cjkvi_variants'] = t
                     t = chise.ids_find_by_code(code)
                     if not t:
                         t = chise.ids_find_by_entity(s)
