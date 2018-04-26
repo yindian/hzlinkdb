@@ -8,6 +8,13 @@
 <body style="font-size: xx-large;">
   <div class="navigation">
     <span class="field"><b>{{klnk(key)|safe}}</b>:&nbsp;{{val}}</span> ({{cnt}})
+    {% if result_list|length <= 500 -%}
+    <a href="/?q={{result_list|join}}">+</a>
+    {% else -%}
+    {% for ar in result_list|batch(500) -%}
+    <a href="/?q={{ar|join}}">+<sub>{{loop.index}}</sub></a>
+    {% endfor -%}
+    {% endif -%}
   </div>
   <div class="result">
     {% for s in result_list %}
