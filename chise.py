@@ -726,6 +726,23 @@ _ids_non_ucs = _load_ids_non_ucs('ids')
 def ids_find_by_entity(entity):
     return _ids_non_ucs.get(entity)
 
+def _build_reverse_indices(d, t):
+    r = {}
+    for k, v in d.iteritems():
+        assert type(k) == int
+        s = r.setdefault(v, set())
+        s.add(unichar(k))
+    for k, v in t.iteritems():
+        assert type(k) == unicode
+        s = r.setdefault(v, set())
+        s.add(k)
+    return r
+
+_ids_rev = _build_reverse_indices(_ids_ucs, _ids_non_ucs)
+
+def ids_reverse_lookup(s):
+    return _ids_rev.get(s)
+
 def imgref(entity):
     assert entity.startswith('&')
     assert entity.endswith(';')

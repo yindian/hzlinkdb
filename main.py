@@ -161,6 +161,7 @@ def index():
         for i in xrange(len(qs)):
             s = qs[i]
             dd = {}
+            dd['q'] = s
             ar.append(dd)
             try:
                 code = None
@@ -254,6 +255,10 @@ def index():
                 j = dd['ids']
                 dd['char'] = ''.join([x['char'] for x in ar[i:j]])
                 dd['code'] = ','.join([x['code'] for x in ar[i:j]])
+                s = ''.join([x['q'] for x in ar[i:j]])
+                t = chise.ids_reverse_lookup(s)
+                if t and not dd.has_key('chise_ids'):
+                    dd['chise_ids'] = ' '.join(map(_query_linker, sorted(t)))
         d['readings_key_linker'] = _readings_key_linker
         d['variants_key_linker'] = _variants_key_linker
     return render_template('index.html', **d)
