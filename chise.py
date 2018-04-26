@@ -657,23 +657,22 @@ def _load_ids_ucs(directory):
     for fname in glob.glob(os.path.join(directory, 'IDS-UCS*')):
         with open(fname) as f:
             try:
-                for line in f:
-                    if line.startswith(';'):
+                for line in f.read().splitlines():
+                    if not line or line.startswith(';'):
                         continue
-                    line = line.rstrip().decode('utf-8')
-                    if not line:
-                        continue
-                    assert line.startswith(('U+', 'U-'))
+                    line = line.decode('utf-8')
+                    #assert line.startswith(('U+', 'U-'))
                     ar = line.split('\t')
-                    assert len(ar) >= 3
+                    #assert len(ar) >= 3
                     code = int(ar[0][2:], 16)
-                    assert not d.has_key(code)
+                    #assert not d.has_key(code)
                     if ar[1].startswith('&'):
-                        assert ar[1].endswith(';')
-                        assert not t.has_key(ar[1])
+                        #assert ar[1].endswith(';')
+                        #assert not t.has_key(ar[1])
                         t[ar[1]] = unichar(code)
                     else:
-                        assert ar[1] == unichar(code)
+                        #assert ar[1] == unichar(code)
+                        pass
                     d[code] = ar[2]
             except:
                 print >> sys.stderr, fname, line.encode('gb18030')
@@ -692,17 +691,15 @@ def _load_ids_non_ucs(directory):
             continue
         with open(fname) as f:
             try:
-                for line in f:
-                    if line.startswith(';'):
+                for line in f.read().splitlines():
+                    if not line or line.startswith(';'):
                         continue
-                    line = line.rstrip().decode('utf-8')
-                    if not line:
-                        continue
+                    line = line.decode('utf-8')
                     ar = line.split('\t')
                     if len(ar) < 3:
                         continue
                     if ar[1].startswith('&'):
-                        assert ar[1].endswith(';')
+                        #assert ar[1].endswith(';')
                         if not d.has_key(ar[1]) or d[ar[1]] == ar[1]:
                             d[ar[1]] = ar[2]
                         elif d[ar[1]].count('&') > ar[2].count('&'):
@@ -729,11 +726,11 @@ def ids_find_by_entity(entity):
 def _build_reverse_indices(d, t):
     r = {}
     for k, v in d.iteritems():
-        assert type(k) == int
+        #assert type(k) == int
         s = r.setdefault(v, set())
         s.add(unichar(k))
     for k, v in t.iteritems():
-        assert type(k) == unicode
+        #assert type(k) == unicode
         s = r.setdefault(v, set())
         s.add(k)
     return r

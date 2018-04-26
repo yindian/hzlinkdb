@@ -88,12 +88,10 @@ def _load_variants(directory):
         with open(fname) as f:
             rev = {}
             try:
-                for line in f:
-                    if line.startswith('#'):
+                for line in f.read().splitlines():
+                    if not line or line.startswith('#'):
                         continue
-                    line = line.rstrip().decode('utf-8')
-                    if not line:
-                        continue
+                    line = line.decode('utf-8')
                     ar = line.split(',')
                     rel = ar[1]
                     a, b = ar[0], ar[2]
