@@ -249,6 +249,7 @@ def index():
             except:
                 dd['error'] = traceback.format_exc()
                 traceback.print_exc()
+        has_ids = False
         for i in xrange(len(qs)):
             dd = ar[i]
             if dd.has_key('ids'):
@@ -259,6 +260,16 @@ def index():
                 t = chise.ids_reverse_lookup(s)
                 if t and not dd.has_key('chise_ids'):
                     dd['chise_ids'] = ' '.join(map(_query_linker, sorted(t)))
+                has_ids = True
+        if not has_ids:
+            s = ''.join(qs)
+            t = chise.ids_reverse_lookup(s)
+            if t:
+                dd = {}
+                dd['char'] = ''.join([x['char'] for x in ar])
+                dd['code'] = ','.join([x['code'] for x in ar])
+                dd['chise_ids'] = ' '.join(map(_query_linker, sorted(t)))
+                ar.insert(0, dd)
         d['readings_key_linker'] = _readings_key_linker
         d['variants_key_linker'] = _variants_key_linker
     return render_template('index.html', **d)
