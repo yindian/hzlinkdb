@@ -14,6 +14,12 @@ def unichar(i):
     except ValueError:
         return struct.pack('i', i).decode('utf-32')
 
+def ordinal(c):
+    try:
+        return ord(c)
+    except TypeError:
+        return struct.unpack('i', c.encode('utf-32')[4:])[0]
+
 def _load_ids_analysis(fname):
     d = {}
     with open(fname) as f:
@@ -607,10 +613,57 @@ def _load_zibiao2013(directory, name=None):
     assert len(ar) == 8105
     return ar
 
+def _get_values_of_zibiao2013():
+    return u'一级 二级 三级'.split()
+
+def _index1_in_zibiao2013(ar, s):
+    try:
+        return ar.index(s) + 1
+    except ValueError:
+        return 0
+
+def _locate_value_in_zibiao2013(ar, s):
+    i = _index1_in_zibiao2013(ar, s)
+    if i:
+        if i <= 3500:
+            return u'一级'
+        elif i <= 6500:
+            return u'二级'
+        else:
+            return u'三级'
+
+def _chars_w_value_in_zibiao2013(ar, v):
+    if v == u'一级':
+        return ar[:3500]
+    elif v == u'二级':
+        return ar[3500:6500]
+    else:
+        return ar[6500:]
+
 _table_data = _load_tables('cjkvi-tables')
 
 def get_table_data_by_name(name):
     return _table_data.get(name)
+
+def get_tables_by_code_w_link(code, linker=None):
+    s = unichar(code)
+    d = {}
+    for n in _table_name_map.iterkeys():
+        ar = get_table_data_by_name(n)
+        v = eval('_locate_value_in_' + n)(ar, s)
+        if v:
+            if linker:
+                d[n] = linker(n, v)
+            else:
+                d[n] = v
+    return d
+
+def get_codes_by_table(n, v):
+    ar = get_table_data_by_name(n)
+    return map(ordinal, eval('_chars_w_value_in_' + n)(ar, v))
+
+def get_values_of_table(n):
+    return eval('_get_values_of_' + n)()
 
 if __name__ == '__main__':
     print u'\n'.join(get_table_data_by_name('zibiao2013')).encode('utf-8')

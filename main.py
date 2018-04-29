@@ -129,6 +129,11 @@ def _readings_key_linker(k):
 def _variants_key_linker(k):
     return '<a href="/kv?n=variants&k=%s">%s</a>' % (k, k)
 
+def _tables_key_linker(k, s=None):
+    if s is None:
+        s = k
+    return '<a href="/kv?n=tables&k=%s">%s</a>' % (k, s)
+
 def _variants_linker(k, v):
     vv = urllib.quote(v.encode('utf-8'))
     if k == 'kRSUnicode':
@@ -142,6 +147,12 @@ def _variants_linker(k, v):
     return '<a href="/?q=%s">%s</a>&nbsp;\
 <a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
             vv, unichar(int(v[2:], 16)), k, vv, v)
+
+def _tables_linker(k, v):
+    return '<a href="/l?n=tables&k=%s&v=%s">%s</a>' % (
+            k,
+            urllib.quote(v.encode('utf-8')),
+            xml.sax.saxutils.escape(v))
 
 def _query_linker(s):
     return '<a href="/?q=%s">%s</a>' % (url_quote(s), s)
@@ -212,6 +223,9 @@ def index():
                     t = cjkvi.get_variants(code, _query_linker)
                     if t:
                         dd['cjkvi_variants'] = t
+                    t = cjkvi.get_tables_by_code_w_link(code, _tables_linker)
+                    if t:
+                        dd['tables'] = t
                     t = chise.ids_find_by_code(code)
                     if not t:
                         t = chise.ids_find_by_entity(s)
@@ -273,6 +287,7 @@ def index():
                 ar.insert(0, dd)
         d['readings_key_linker'] = _readings_key_linker
         d['variants_key_linker'] = _variants_key_linker
+        d['tables_key_linker']   = _tables_key_linker
     return render_template('index.html', **d)
 
 @app.route('/l', methods=['GET', 'POST'])
@@ -292,6 +307,9 @@ def link():
     elif name == 'variants':
         repo = unihan.get_codes_by_variant(key, val)
         d['klnk'] = _variants_key_linker
+    elif name == 'tables':
+        repo = cjkvi.get_codes_by_table(key, val)
+        d['klnk'] = _tables_key_linker
     if True:
         try:
             for code in repo:
@@ -322,6 +340,8 @@ def keyvalues():
             if key.endswith('Variant'):
                 values = [unichar(int(v[2:], 16)) for v in values]
                 d['quote'] = url_quoted_unicode_value
+        elif name == 'tables':
+            values = cjkvi.get_values_of_table(key)
         for s in values:
             ar.append(s)
             n += 1

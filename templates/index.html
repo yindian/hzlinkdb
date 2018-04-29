@@ -9,7 +9,7 @@
   <div class="navigation">
     <div class="table_list">
       {% for name, text in table_list %}
-      <span><a href="/table?n={{name}}">{{text}}</a></span>
+      <span>{{tables_key_linker(name, text)|safe}}</a></span>
       {% endfor %}
     </div>
     <form name="nav_form" method="get">
@@ -41,6 +41,15 @@
       {% set l = variants_key_linker -%}
       {% for k in variants.keys()|sort: %}
       <span class="field"><b>{{l(k)|safe}}</b>:&nbsp;{{variants[k]|safe}}</span>
+      <span class="sep"> ; </span>
+      {% endfor %}
+    </span>
+    {% endif %}
+    {% if d.has_key('tables') -%}
+    <span class="cjkvi_tables">
+      {% set l = tables_key_linker -%}
+      {% for k in d.tables.keys()|sort|reverse: %}
+      <span class="field"><b>{{l(k)|safe}}</b>:&nbsp;{{d.tables[k]|safe}}</span>
       <span class="sep"> ; </span>
       {% endfor %}
     </span>
