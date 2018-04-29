@@ -150,6 +150,51 @@ def get_variants(code, linker=None):
             br.append(u'</sub>')
         return u''.join(br)
 
+_table_list = (
+        ('zibiao2009', 'Tongyong Guifan Hanzi Biao'),
+        )
+_table_name_map = dict(_table_list)
+
+def get_table_list():
+    return _table_list
+
+def get_table_name(table):
+    return _table_name_map[table]
+
+def _load_tables(directory):
+    d = {}
+    for n in _table_name_map.iterkeys():
+        d[n] = eval('_load_' + n)(directory, n)
+    return d
+
+_sup_digits = set(u'¹²³\u2074\u2075\u2076\u2077\u2078\u2079\u2070')
+
+def _load_zibiao2009(directory, name):
+    n = 0
+    ar = []
+    for i in (1, 2, 3):
+        fname = os.path.join(directory, '%s-%d.txt' % (name, i))
+        with open(fname) as f:
+            for line in f.read().splitlines():
+                if not (line and 0x30 <= ord(line[0]) < 0x40):
+                    continue
+                line = line.decode('utf-8')
+                assert line[4] == u'\u3000'
+                n += 1
+                assert int(line[:4]) == n
+                s = line[5:]
+                while s[-1] in _sup_digits:
+                    s = s[:-1]
+                assert s
+                ar.append(s)
+    assert len(ar) == n == 8300
+    return ar
+
+_table_data = _load_tables('cjkvi-tables')
+
+def get_table_data_by_name(name):
+    return _table_data.get(name)
+
 if __name__ == '__main__':
-    pass
+    print u'\n'.join(get_table_data_by_name('zibiao2009')).encode('utf-8')
 # vim:ts=4:sw=4:et:ai:cc=80

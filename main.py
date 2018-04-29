@@ -151,8 +151,8 @@ def index():
     db = get_db()
     d = {}
     d['table_list'] = [
-            ('zibiao2009', 'Tongyong Guifan Hanzi Biao'),
             ]
+    d['table_list'].extend(cjkvi.get_table_list())
     d['result_list'] = ar = []
     query = request.args.get('q') or request.form.get('q')
     if query:
@@ -269,6 +269,7 @@ def index():
                 dd['char'] = ''.join([x['char'] for x in ar])
                 dd['code'] = ','.join([x['code'] for x in ar])
                 dd['chise_ids'] = ' '.join(map(_query_linker, sorted(t)))
+                dd['chise_ids_find'] = chise.ids_find_url(s)
                 ar.insert(0, dd)
         d['readings_key_linker'] = _readings_key_linker
         d['variants_key_linker'] = _variants_key_linker
