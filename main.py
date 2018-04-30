@@ -285,9 +285,9 @@ def index():
                 dd['chise_ids'] = ' '.join(map(_query_linker, sorted(t)))
                 dd['chise_ids_find'] = chise.ids_find_url(s)
                 ar.insert(0, dd)
-        d['readings_key_linker'] = _readings_key_linker
-        d['variants_key_linker'] = _variants_key_linker
-        d['tables_key_linker']   = _tables_key_linker
+    d['readings_key_linker'] = _readings_key_linker
+    d['variants_key_linker'] = _variants_key_linker
+    d['tables_key_linker']   = _tables_key_linker
     return render_template('index.html', **d)
 
 @app.route('/l', methods=['GET', 'POST'])
