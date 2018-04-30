@@ -275,7 +275,7 @@ def index():
                 if t and not dd.has_key('chise_ids'):
                     dd['chise_ids'] = ' '.join(map(_query_linker, sorted(t)))
                 has_ids = True
-        if not has_ids:
+        if not has_ids and len(qs) > 1:
             s = ''.join(qs)
             t = chise.ids_reverse_lookup(s)
             if t:
