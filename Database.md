@@ -70,9 +70,14 @@ This is an amateur project. The author's point of view may be unprofessional or 
 | `nFreq`    | Frequency of this reading according to `kHanyuPinlu` from Unihan DB (excluding non-proper Hanzi), 7 for level 1 in *Zibiao*, 6 for priority A in IICore, 5 for level 2, 4 for priority B, 3 for level 3, 2 for priority C, 1 for other entries found in dictionaries, 0 for artificial readings |
 | `bInGY`    | Whether this reading is derived from an entry in the MC rhyme book [Guangyun](https://en.wikipedia.org/wiki/Guangyun) |
 | `tPhon`    | Phonetic component if any |
+| `tPhPY`    | Pinyin of the phonetic component if any |
+| `tPhGC`    | MGCR of the phonetic component if any |
+| `tMsPY`    | Space-delimited misreading / non-standard pinyin from Mandarin dialects, if any |
+| `tSndh`    | Space-delimited sandhi pinyin in Standard Chinese (usually occur in notes, not entries, in dictionaries), if any |
 | `tVar1`    | Space-delimited Type-1 variants, which can be exchanged without ambiguity |
 | `tVar2`    | Space-delimited Type-2 variants, which can be exchanged only in some cases of specific meanings |
 | `tVar3`    | Space-delimited Type-3 variants, which cannot be exchanged, usually a phonetic loan |
 | `tCogn`    | Space-delimited cognate characters if any |
 | `tCoin`    | Original characters of the coinage if any |
+| `tSmpl`    | Space-delimited sample words if any |
 | `tRem`     | Optional remark of this entry |
