@@ -24,6 +24,7 @@ _start = time.clock()
 import cjkvi
 _end = time.clock()
 print >> sys.stderr, _end - _start, 'seconds elapsed importing cjkvi'
+import hzdb
 
 app = Flask(__name__)
 
