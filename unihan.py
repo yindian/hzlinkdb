@@ -351,13 +351,24 @@ _read_data('Unihan_IRGSources.txt', set([
     'kIICore',
     'kRSUnicode',
     ]), _variants)
+_read_data('Unihan_OtherMappings.txt', set([
+    'kGB0',
+    'kGB1',
+    'kBigFive',
+    'kJis0',
+    ]), _variants)
 _pat_u_wo_less_than = re.compile(r'U\+[^< ]+')
 _pat_ABC_GHJKMPT = re.compile(r'[ABCGHJKMPT]')
+_pat_quwei_qu = re.compile(r'([0-9A-F]{2})[0-9A-F]{2}')
 _variants_splitter = dict(
         kSemanticVariant = _pat_u_wo_less_than.findall,
         kSpecializedSemanticVariant = _pat_u_wo_less_than.findall,
         kZVariant = _pat_u_wo_less_than.findall,
         kIICore = _pat_ABC_GHJKMPT.findall,
+        kGB0 = _pat_quwei_qu.findall,
+        kGB1 = _pat_quwei_qu.findall,
+        kBigFive = _pat_quwei_qu.findall,
+        kJis0 = _pat_quwei_qu.findall,
         )
 _variants_value_sort_key = dict(
         kRSUnicode = _multi_numeric_sort,

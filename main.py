@@ -135,7 +135,11 @@ def _tables_key_linker(k, s=None):
         s = k
     return '<a href="/kv?n=tables&k=%s">%s</a>' % (k, s)
 
+_charset = set(['kGB0', 'kGB1', 'kBigFive', 'kJis0'])
+
 def _variants_linker(k, v):
+    if k in _charset:
+        return '<a href="/l?n=variants&k=%s&v=%s">%s</a>' % (k, v, v)
     vv = urllib.quote(v.encode('utf-8'))
     if k == 'kRSUnicode':
         radical = int(v[:v.index('.')].rstrip("'"), 10) - 1
