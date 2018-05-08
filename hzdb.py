@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sqlite3
 import sys, os
+import string
 import time
 _start = time.clock()
 import unihan
@@ -15,6 +16,55 @@ if __name__ == '__main__':
     print >> sys.stderr, _end - _start, 'seconds elapsed importing cjkvi'
 
 assert sqlite3.sqlite_version_info >= (3, 8, 2) # for WITHOUT ROWID
+
+try:
+    import icu
+    normalize_nfd = icu.Normalizer2.getInstance(None, 'nfc',
+            icu.UNormalizationMode2.DECOMPOSE).normalize
+except:
+    def normalize_nfd(s):
+        return s
+_py_tones = u'\u0304\u0301\u030C\u0300'
+_py_umlaut= u'\u0308'
+_py_flex  = u'\u0302'
+_py_char_set = set(string.ascii_lowercase + _py_tones + _py_umlaut + _py_flex)
+def normalize_pinyin(s):
+    if not s:
+        return s
+    if type(s) == str:
+        s = s.decode('utf-8')
+    try:
+        s.encode('ascii')
+        if s[-1].isdigit():
+            assert u'1' <= s[-1] <= u'5'
+            assert s[:-1].isalpha()
+            return s
+        assert s.isalpha()
+        return s + u'5'
+    except:
+        pass
+    try:
+        tone = 5
+        ar = []
+        for c in normalize_nfd(s):
+            assert c in _py_char_set
+            if c.isalpha():
+                ar.append(c)
+            else:
+                if c == _py_umlaut:
+                    assert ar[-1] == u'u'
+                    ar[-1] = u'v'
+                elif c == _py_flex:
+                    assert ar[-1] == u'e'
+                    ar[-1] = u'ee'
+                else:
+                    assert tone == 5
+                    tone = _py_tones.index(c) + 1
+        ar.append(str(tone))
+        return u''.join(ar)
+    except:
+        print >> sys.stderr, repr(s)
+        raise
 
 def create(db):
     cur = db.cursor()
@@ -180,6 +230,10 @@ def insert_morph(db, *args, **kwargs):
                 d['tMGCR'] = args[2]
                 assert len(args) <= 3
     d.update(**kwargs)
+    if d.has_key('tPY'):
+        d['tPY'] = normalize_pinyin(d['tPY'])
+    if d.has_key('tPhPY'):
+        d['tPhPY'] = normalize_pinyin(d['tPhPY'])
     return _insert_db(db, 'HZMorph', d)
 
 def init_data(db):
