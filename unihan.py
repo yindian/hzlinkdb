@@ -114,6 +114,8 @@ def _get_data_by_code_w_link(d, code, keys=None, linker=None,
         linker = _default_linker
     t = _get_data_by_code(d, code, keys)
     if t:
+        if type(t) != dict:
+            t = {keys: t}
         for k in t.keys():
             v = t[k]
             f = splitter.get(k, string.split)
@@ -336,6 +338,10 @@ def get_readings_by_code(code, keys=None):
 def get_readings_by_code_w_link(code, keys=None, linker=None):
     return _get_data_by_code_w_link(_readings, code, keys, linker,
             _readings_splitter, _readings_rev_idx, _readings_transformer)
+
+def get_readings_by_code_w_link_all(code, keys=None, linker=None):
+    return _get_data_by_code_w_link(_readings, code, keys, linker,
+            _readings_splitter, None, _readings_transformer)
 
 def get_codes_by_reading(k, v):
     return _lookup_reverse_indices(_readings_rev_idx, k, v,

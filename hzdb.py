@@ -2,6 +2,17 @@
 # -*- coding: utf-8 -*-
 import sqlite3
 import sys, os
+import time
+_start = time.clock()
+import unihan
+_end = time.clock()
+if __name__ == '__main__':
+    print >> sys.stderr, _end - _start, 'seconds elapsed importing unihan'
+_start = time.clock()
+import cjkvi
+_end = time.clock()
+if __name__ == '__main__':
+    print >> sys.stderr, _end - _start, 'seconds elapsed importing cjkvi'
 
 assert sqlite3.sqlite_version_info >= (3, 8, 2) # for WITHOUT ROWID
 
@@ -132,10 +143,180 @@ def create(db):
     cur.execute('create trigger HZMPhChkDel before delete on HZMorph '
             'begin'
             ' select raise(fail, "would break phonetic reference") where'
-            ' exists (select 1 from HZMorph where tPhon = old.tHz'
+            ' exists (select 1 from HZMorph where tPhon = old.tHZ'
             ' and (tPhPY is null or tPhPY = old.tPY)'
             ' and (tPhGC is null or tPhGC = old.tMGCR) limit 1); '
             'end')
+
+def _insert_db(db, table, d):
+    assert d
+    sql = 'insert into %s (%s) values (%s)' % (
+            table,
+            ', '.join(d.keys()),
+            ', '.join([type(s) == unicode and '"%s"' % s or str(s)
+                for s in d.itervalues()]),
+            )
+    try:
+        db.execute(sql)
+    except:
+        print >> sys.stderr, sql
+        raise
+
+def insert_graph(db, *args, **kwargs):
+    d = {}
+    if args:
+        d['tHanzi'] = args[0]
+        assert len(args) <= 1
+    d.update(**kwargs)
+    return _insert_db(db, 'HZGraph', d)
+
+def insert_morph(db, *args, **kwargs):
+    d = {}
+    if args:
+        d['tHZ'] = args[0]
+        if len(args) > 1:
+            d['tPY'] = args[1]
+            if len(args) > 2:
+                d['tMGCR'] = args[2]
+                assert len(args) <= 3
+    d.update(**kwargs)
+    return _insert_db(db, 'HZMorph', d)
+
+def init_data(db):
+    name = 'zibiao2013'
+    levels = cjkvi.get_values_of_table(name)
+    assert len(levels) == 3
+    done = set()
+    unichar = cjkvi.unichar
+    def _process_code(code, freq):
+        c = unichar(code)
+        # pinyin readings
+        ar = []
+        def add_ar(k, v):
+            ar.append(v)
+            return ''
+        unihan.get_readings_by_code_w_link_all(code, 'kHanyuPinlu', add_ar)
+        if ar:
+            br = unihan.get_readings_by_code(code, 'kHanyuPinlu').split()
+            assert len(ar) == len(br)
+            for i in xrange(len(ar)):
+                assert br[i].startswith(ar[i] + '(')
+                assert br[i].endswith(')')
+                n = int(br[i][len(ar[i])+1:-1])
+                assert n > 7
+                insert_morph(db, c, tPY=ar[i], nFreq=n)
+            n = 1
+        else:
+            n = freq
+        br = []
+        def add_br(k, v):
+            if v not in ar and not v.isdigit():
+                br.append(v)
+            return ''
+        unihan.get_readings_by_code_w_link_all(code, 'kXHC1983', add_br)
+        for s in br:
+            insert_morph(db, c, tPY=s, nFreq=n)
+            n = 1
+        if not ar and not br:
+            unihan.get_readings_by_code_w_link_all(code,
+                    'kHanyuPinyin', add_br)
+            cr = set()
+            for s in br:
+                if s in cr:
+                    continue
+                cr.add(s)
+                insert_morph(db, c, tPY=s, nFreq=n)
+                n = 1
+            if not br:
+                unihan.get_readings_by_code_w_link_all(code,
+                        'kMandarin', add_ar)
+                n = 0
+                for s in ar:
+                    insert_morph(db, c, tPY=s, nFreq=n)
+        # variant forms
+        d = {}
+        cr = []
+        def add_cr(k, v):
+            cr.append(unichar(int(v[2:], 16)))
+            return ''
+        unihan.get_variants_by_code_w_link(code,
+                'kSimplifiedVariant', add_cr)
+        if cr:
+            d['tSimp'] = ' '.join(cr)
+            cr = []
+        unihan.get_variants_by_code_w_link(code,
+                'kTraditionalVariant', add_cr)
+        if cr:
+            d['tTrad'] = ' '.join(cr)
+            cr = []
+        unihan.get_variants_by_code_w_link(code,
+                'kZVariant', add_cr)
+        if cr:
+            d['tJpShin'] = ' '.join(cr)
+            cr = []
+        try:
+            c.encode('gb2312')
+        except UnicodeEncodeError:
+            try:
+                d['tGBFB'] = d['tSimp'].split()[0]
+                d['tGBFB'].encode('gb2312')
+            except:
+                d['tGBFB'] = u'？'
+        try:
+            c.encode('big5')
+        except UnicodeEncodeError:
+            unihan.get_variants_by_code_w_link(code,
+                    'kSemanticVariant', add_cr)
+            if not d.has_key('tTrad') and not d.has_key('tGBFB') and cr:
+                d['tTrad'] = ' '.join(cr)
+            try:
+                d['tB5FB'] = d['tTrad'].split()[0]
+                d['tB5FB'].encode('big5')
+            except:
+                d['tB5FB'] = u'？'
+        try:
+            c.encode('euc-jp')
+        except UnicodeEncodeError:
+            try:
+                d['tJISFB'] = d['tJpShin'].split()[0]
+                d['tJISFB'].encode('euc-jp')
+            except:
+                try:
+                    d['tJISFB'] = d['tTrad'].split()[0]
+                    d['tJISFB'].encode('euc-jp')
+                except:
+                    d['tJISFB'] = u'？'
+        if not d.has_key('tJpShin') and d.get('tJISFB') not in (None, u'？'):
+            d['tJpShin'] = d['tJISFB']
+        if d.get('tB5FB') == u'？' and d.get('tJISFB') not in (None, u'？'):
+            try:
+                d['tJISFB'].encode('big5')
+                d['tB5FB'] = d['tJISFB']
+            except:
+                pass
+        if d.get('tGBFB') == u'？' and d.get('tJISFB') not in (None, u'？'):
+            try:
+                d['tJISFB'].encode('gb2312')
+                d['tGBFB'] = d['tJISFB']
+            except:
+                pass
+        insert_graph(db, c, **d)
+        done.add(code)
+    freq = 7
+    for lvl in levels:
+        for code in cjkvi.get_codes_by_table(name, lvl):
+            _process_code(code, freq)
+        freq -= 2
+    name = 'kIICore'
+    levels = unihan.get_values_of_variant(name)
+    levels = levels[:levels.index('G')]
+    assert len(levels) == 3
+    freq = 6
+    for lvl in levels:
+        for code in unihan.get_codes_by_variant(name, lvl):
+            if code not in done:
+                _process_code(code, freq)
+        freq -= 2
 
 if __name__ == '__main__':
     try:
@@ -146,7 +327,16 @@ if __name__ == '__main__':
         print 'Already initialized'
         sys.exit(1)
     db = sqlite3.connect(fname)
+    _start = time.clock()
     create(db)
+    db.commit()
+    _end = time.clock()
+    print >> sys.stderr, _end - _start, 'seconds elapsed creating db'
+    _start = time.clock()
+    init_data(db)
+    db.commit()
+    _end = time.clock()
+    print >> sys.stderr, _end - _start, 'seconds elapsed filling data in db'
     print 'Database initialized'
 
 # vim:ts=4:sw=4:et:ai:cc=80
