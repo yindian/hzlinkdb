@@ -22,8 +22,30 @@ try:
     normalize_nfd = icu.Normalizer2.getInstance(None, 'nfc',
             icu.UNormalizationMode2.DECOMPOSE).normalize
 except:
+    import re
+    _norm_sub = {}
+    _py_tones = u'\u0304\u0301\u030C\u0300'
+    _py_tone_xform = {
+            u'a':       u'āáǎà',
+            u'o':       u'ōóǒò',
+            u'e':       u'ēéěè',
+            u'i':       u'īíǐì',
+            u'u':       u'ūúǔù',
+            u'u\u0308': u'ǖǘǚǜü',
+            u'e\u0302': u'?ế?ềê',
+            u'm':       u'?ḿ??',
+            u'n':       u'?ńňǹ',
+            }
+    for k, v in _py_tone_xform.iteritems():
+        for i in xrange(len(v)):
+            if i == len(_py_tones):
+                _norm_sub[v[i]] = k
+            elif v[i] != u'?':
+                _norm_sub[v[i]] = k + _py_tones[i]
+    _norm_pat = re.compile(u'|'.join(_norm_sub.keys()))
+    _norm_repl = lambda m: _norm_sub[m.group()]
     def normalize_nfd(s):
-        return s
+        return _norm_pat.sub(_norm_repl, s)
 _py_tones = u'\u0304\u0301\u030C\u0300'
 _py_umlaut= u'\u0308'
 _py_flex  = u'\u0302'

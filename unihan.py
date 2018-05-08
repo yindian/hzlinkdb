@@ -8,6 +8,7 @@ except:
     import zipfile
 import xml.sax.saxutils
 import struct
+import traceback
 
 def unichar(i):
     try:
