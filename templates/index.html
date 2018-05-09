@@ -4,6 +4,57 @@
 <meta charset="utf-8">
 <title>Hanzi Link Database{{query and ' - %s' % (query,) or ''}}</title>
 <link rel="stylesheet" type="text/css" href="/static/style.css">
+<script src="/static/jquery.min.js"></script>
+<script type="text/javascript">
+$(window).on('load', function() {
+  $('td.hz_del').each(function() {
+    var tbody = $(this).parentsUntil('table').get(-1);
+    if (tbody.tagName != 'TBODY') {
+      alert('Unexpected body tag ' + tbody.tagName);
+      return;
+    }
+    var tr = $(this).parent().get(0);
+    if (tr.tagName != 'TR') {
+      alert('Unexpected row tag ' + tr.tagName);
+      return;
+    }
+    if ($(tr).parent().get(0) != tbody) {
+      alert('Unexpected parent ' + $(tr).parent().get(0).tagName);
+      return;
+    }
+    if ($(tbody).children().index(tr) <= 0) {
+      alert('Unexpected row index ' + $(tbody).children().index(tr));
+      return;
+    }
+    if ($(tr).children().index(this) != 0) {
+      alert('Unexpected column index ' + $(tr).children().index(this));
+      return;
+    }
+    var row = $(tbody).children().index(tr);
+    var db = $(tbody).parent().children('caption').text();
+    var keys;
+    if (db == 'HZGraph') {
+      keys = 1;
+    } else if (db == 'HZMorph') {
+      keys = 3;
+    } else {
+      alert('Unexpected caption ' + db);
+      return;
+    }
+    var head = $(tbody).children().first().children();
+    var obj = {};
+    var val;
+    for (var i = 0; i < keys; i++) {
+      obj[head[1 + i].innerHTML] = $(tr).children()[1 + i].innerHTML;
+    }
+    var btn = $('<button>-</button>');
+    btn.click(function() {
+      alert(row + '. ' + JSON.stringify(obj));
+    });
+    $(this).append(btn);
+  })
+})
+</script>
 </head>
 <body>
   <div class="navigation">
