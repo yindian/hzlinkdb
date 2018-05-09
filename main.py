@@ -47,6 +47,18 @@ def get_db():
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
+@app.cli.command()
+def initdb():
+    '''Create the database with initial data.'''
+    db = get_db()
+    _start = time.clock()
+    hzdb.create(db)
+    db.commit()
+    hzdb.init_data(db)
+    db.commit()
+    _end = time.clock()
+    print 'Database initialized in %g seconds' % (_end - _start,)
+
 def unichar(i):
     try:
         return unichr(i)
@@ -236,6 +248,8 @@ def index():
                         t = chise.ids_find_by_entity(s)
                     if t:
                         dd['chise_ids_find'] = chise.ids_find_url(code)
+                    dd['hz_graph'] = hzdb.get_graph_by_code(db, code)
+                    dd['hz_morph'] = hzdb.get_morph_by_code(db, code)
                 else:
                     t = chise.ids_find_by_entity(s)
                 if t is not None:

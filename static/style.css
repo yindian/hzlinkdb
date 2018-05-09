@@ -54,7 +54,17 @@ a {
 .field b a {
   color: WindowText;
 }
+.hz_graph > span + span, .hz_morph > span + span,
 .ids > span + span, .variants > span + span {
   margin-left: 1em;
+}
+.hz_graph, .hz_morph {
+  margin-top: 1ex;
+}
+.hz_morph > table {
+  width: 100%;
+}
+.hz_morph th {
+  text-align: left;
 }
 /* vim: set ts=2 sw=2 et tw=80 cc=80 : */

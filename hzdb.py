@@ -220,6 +220,18 @@ def create(db):
             ' and (tPhGC is null or tPhGC = old.tMGCR) limit 1); '
             'end')
 
+unichar = cjkvi.unichar
+
+def get_graph_by_code(db, code):
+    cur = db.cursor()
+    cur.execute('select * from HZGraph where tHanzi = ?', (unichar(code),))
+    return cur.fetchone()
+
+def get_morph_by_code(db, code):
+    cur = db.cursor()
+    cur.execute('select * from HZMorph where tHZ = ?', (unichar(code),))
+    return cur.fetchall()
+
 def _insert_db(db, table, d):
     assert d
     sql = 'insert into %s (%s) values (%s)' % (
@@ -263,7 +275,6 @@ def init_data(db):
     levels = cjkvi.get_values_of_table(name)
     assert len(levels) == 3
     done = set()
-    unichar = cjkvi.unichar
     def _process_code(code, freq):
         c = unichar(code)
         # pinyin readings

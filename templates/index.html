@@ -77,6 +77,33 @@
     </span>
     {% endif %}
     </div>
+    <div class="hz_graph">
+      {% set hz_graph = d.get('hz_graph') -%}
+      {% if hz_graph -%}
+      {% for k in hz_graph.keys(): -%}
+      <span class="field"><b>{{k}}</b>:&nbsp;{{hz_graph[k]}}</span>
+      {% endfor -%}
+      {% endif %}
+    </div>
+    <div class="hz_morph">
+      {% set hz_morph = d.get('hz_morph') or [] -%}
+      {% if hz_morph -%}
+      <table>
+        <tr>
+          {% for k in hz_morph[0].keys(): -%}
+          <th>{{k}}</th>
+          {% endfor %}
+        </tr>
+        {% for row in hz_morph -%}
+        <tr>
+          {% for k in row.keys(): -%}
+          <td>{{row[k]}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+    </div>
     &nbsp;
     <div class="error"><pre>{{d.get('error', '')}}</pre></div>
   </div>
