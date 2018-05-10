@@ -244,6 +244,36 @@ def delete_from(db, table, d):
         print >> sys.stderr, sql, d
         raise
 
+def update_field(db, table, d, field, val):
+    assert d
+    if type(val) == unicode:
+        val = val.strip()
+        if field in ('tPY', 'tPhPY'):
+            val = normalize_pinyin(val)
+    sql = 'update %s set %s = ? where %s' % (
+            table,
+            field,
+            ' and '.join(['%s = ?' % (s,) for s in d.iterkeys()]),
+            )
+    try:
+        db.execute(sql, [val] + d.values())
+    except:
+        print >> sys.stderr, sql, d
+        raise
+    if d.has_key(field):
+        d[field] = val
+    cur = db.cursor()
+    sql = 'select * from %s where %s' % (
+            table,
+            ' and '.join(['%s = ?' % (s,) for s in d.iterkeys()]),
+            )
+    try:
+        cur.execute(sql, d.values())
+    except:
+        print >> sys.stderr, sql, d
+        raise
+    return cur.fetchone()
+
 def _insert_db(db, table, d):
     assert d
     sql = 'insert into %s (%s) values (%s)' % (

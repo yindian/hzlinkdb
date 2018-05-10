@@ -57,6 +57,39 @@ function add_del_btn() {
     });
   });
   $(this).append(btn);
+  $(tr).children().each(function(i) {
+    if (i < 2) {
+      return;
+    }
+    var field = head[i].innerHTML;
+    var val = this.innerHTML;
+    var me = this;
+    $(this).click(function() {
+      var input = window.prompt(field, val);
+      if (input != null) {
+        var d = $.extend({field: field, val: input}, obj);
+        $.post('/upd8', d, function(data) {
+          if (data.error) {
+            $(error).text(data.error);
+          } else {
+            $(error).empty();
+            $(me).empty();
+            val = data.val;
+            if (val != '') {
+              $(me).text(val);
+            }
+            if (i <= keys) {
+              obj[field] = val;
+            }
+          }
+        }, 'json').fail(function(data) {
+          $(error).text('Ajax failure: ' + data.status + ' ' + data.statusText);
+        });
+      } else {
+        $(error).empty();
+      }
+    });
+  });
 }
 $(window).on('load', function() {
   $('td.hz_del').each(add_del_btn);

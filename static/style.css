@@ -73,6 +73,10 @@ a {
 .hz_morph td:nth-child(1n+3):hover {
   background-color: #F8F5F1;
 }
+.hz_graph td:nth-child(1n+3):active,
+.hz_morph td:nth-child(1n+3):active {
+  background-color: #AF9A87;
+}
 .hz_del button, .hz_add button,
 .hz_del, .hz_add {
   width: 2em;

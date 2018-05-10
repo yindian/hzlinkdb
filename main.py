@@ -69,6 +69,7 @@ def del_from_db():
         table = d.pop('db')
         hzdb.delete_from(db, table, d)
         db.commit()
+        d.clear()
     except:
         d['error'] = traceback.format_exc()
     return jsonify(d)
@@ -87,6 +88,29 @@ def add_to_db():
         db.commit()
         d['keys'] = row.keys()
         d['values'] = map(unicode, map(row.__getitem__, row.keys()))
+    except:
+        d['error'] = traceback.format_exc()
+    return jsonify(d)
+
+_special_value_map = {
+        'None': None,
+        'True': True,
+        'False': False,
+        }
+@app.route('/upd8', methods=['POST'])
+def update_db():
+    db = get_db()
+    d = {}
+    try:
+        d.update(request.form.iteritems())
+        table = d.pop('db')
+        field = d.pop('field')
+        val = d.pop('val')
+        val = _special_value_map.get(val, val)
+        row = hzdb.update_field(db, table, d, field, val)
+        db.commit()
+        d.clear()
+        d['val'] = unicode(row[str(field)])
     except:
         d['error'] = traceback.format_exc()
     return jsonify(d)
