@@ -3,6 +3,7 @@
 import sqlite3
 import sys, os
 import string
+import re
 import time
 _start = time.clock()
 import unihan
@@ -87,6 +88,20 @@ def normalize_pinyin(s):
     except:
         print >> sys.stderr, repr(s)
         raise
+
+_py_tone_digit_pat = re.compile(ur'[1-5]')
+def validate_pinyin(s):
+    assert len(s.split()) == 1
+    s.encode('ascii')
+    assert u'1' <= s[-1] <= u'5'
+    assert all([x.isalpha() for x in _py_tone_digit_pat.split(s)[:-1]])
+    return True
+
+def validate_mgcr(s):
+    assert len(s.split()) == 1
+    s.encode('ascii')
+    assert s.isalpha()
+    return True
 
 def create(db):
     cur = db.cursor()
@@ -221,6 +236,11 @@ def create(db):
             'end')
 
 unichar = cjkvi.unichar
+ordinal = cjkvi.ordinal
+
+def ishanzi(s):
+    assert ordinal(s) >= 0x2E80
+    return True
 
 def get_graph_by_code(db, code):
     cur = db.cursor()
@@ -244,12 +264,54 @@ def delete_from(db, table, d):
         print >> sys.stderr, sql, d
         raise
 
+def _chk(cond):
+    if not cond:
+        raise AssertionError
+    return True
+
+_check_graph_func = dict(
+        tHanzi     = lambda s: s,
+        tParent    = lambda s: s is None or ishanzi(s),
+        tSimp      = lambda s: _chk(map(ishanzi, s.split())),
+        tGBFB      = lambda s: _chk(len(s.split()) == 1) and s.encode('gb2312'),
+        tTrad      = lambda s: _chk(map(ishanzi, s.split())),
+        tB5FB      = lambda s: _chk(len(s.split()) == 1) and s.encode('big5'),
+        tJpShin    = lambda s: _chk(map(ishanzi, s.split())),
+        tJISFB     = lambda s: _chk(len(s.split()) == 1) and s.encode('euc-jp'),
+        )
+_check_morph_func = dict(
+        tHZ   = lambda s, z: s,
+        tPY   = lambda s, z: validate_pinyin(s),
+        tMGCR = lambda s, z: validate_mgcr(s),
+        nFreq = lambda s, z: s is None or int(s),
+        bInGY = lambda s, z: s is None or _chk(int(s) in (0, 1)),
+        tPhon = lambda s, z: s is None or ishanzi(s),
+        tPhPY = lambda s, z: s is None or validate_pinyin(s),
+        tPhGC = lambda s, z: s is None or validate_mgcr(s),
+        tMsPY = lambda s, z: s is None or map(validate_pinyin, s.split()),
+        tSndh = lambda s, z: s is None or map(validate_pinyin, s.split()),
+        tVar1 = lambda s, z: s is None or _chk(map(ishanzi, s.split())),
+        tVar2 = lambda s, z: s is None or _chk(map(ishanzi, s.split())),
+        tVar3 = lambda s, z: s is None or _chk(map(ishanzi, s.split())),
+        tCogn = lambda s, z: s is None or _chk(map(ishanzi, s.split())),
+        tCoin = lambda s, z: s is None or _chk(map(ishanzi, s.replace(' ',''))),
+        tSmpl = lambda s, z: s is None or _chk([x.index(z) for x in s.split()]),
+        tRem  = lambda s, z: s,
+        )
+def _check_field(table, field, val, d):
+    if table == 'HZGraph':
+        _check_graph_func[field](val)
+    else:
+        assert table == 'HZMorph'
+        _check_morph_func[field](val, d['tHZ'])
+
 def update_field(db, table, d, field, val):
     assert d
     if type(val) == unicode:
         val = val.strip()
         if field in ('tPY', 'tPhPY'):
             val = normalize_pinyin(val)
+    _check_field(table, field, val, d)
     sql = 'update %s set %s = ? where %s' % (
             table,
             field,
