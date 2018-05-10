@@ -249,7 +249,9 @@ def get_graph_by_code(db, code):
 
 def get_morph_by_code(db, code):
     cur = db.cursor()
-    cur.execute('select * from HZMorph where tHZ = ?', (unichar(code),))
+    cur.execute('select * from HZMorph where tHZ = ?'
+            ' order by nFreq desc, tPY'
+            , (unichar(code),))
     return cur.fetchall()
 
 def delete_from(db, table, d):
