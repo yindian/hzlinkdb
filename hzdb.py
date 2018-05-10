@@ -347,6 +347,8 @@ def init_data(db):
             ar.append(v)
             return ''
         unihan.get_readings_by_code_w_link_all(code, 'kHanyuPinlu', add_ar)
+        if freq & 1 == 0: # not in zibiao2013
+            ar = []
         if ar:
             br = unihan.get_readings_by_code(code, 'kHanyuPinlu').split()
             assert len(ar) == len(br)
