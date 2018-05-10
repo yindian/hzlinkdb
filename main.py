@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from flask import Flask
 from flask import render_template, abort, g, request
+from flask import jsonify
 from sqlite3 import dbapi2 as sqlite3
 import sys, os
 import string
@@ -58,6 +59,37 @@ def initdb():
     db.commit()
     _end = time.clock()
     print 'Database initialized in %g seconds' % (_end - _start,)
+
+@app.route('/del', methods=['POST'])
+def del_from_db():
+    db = get_db()
+    d = {}
+    try:
+        d.update(request.form.iteritems())
+        table = d.pop('db')
+        hzdb.delete_from(db, table, d)
+        db.commit()
+    except:
+        d['error'] = traceback.format_exc()
+    return jsonify(d)
+
+@app.route('/add', methods=['POST'])
+def add_to_db():
+    db = get_db()
+    d = {}
+    try:
+        d.update(request.form.iteritems())
+        table = d.pop('db')
+        code = d.pop('code')
+        assert code.startswith(('U+', 'U-'))
+        code = int(code[2:], 16)
+        row = hzdb.insert_code_to(db, table, code)
+        db.commit()
+        d['keys'] = row.keys()
+        d['values'] = map(unicode, map(row.__getitem__, row.keys()))
+    except:
+        d['error'] = traceback.format_exc()
+    return jsonify(d)
 
 def unichar(i):
     try:

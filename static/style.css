@@ -69,6 +69,11 @@ a {
 .hz_morph th {
   text-align: left;
 }
+.hz_graph td:nth-child(1n+3):hover,
+.hz_morph td:nth-child(1n+3):hover {
+  background-color: #F8F5F1;
+}
+.hz_del button, .hz_add button,
 .hz_del, .hz_add {
   width: 2em;
 }

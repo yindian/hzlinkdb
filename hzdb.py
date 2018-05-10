@@ -232,6 +232,18 @@ def get_morph_by_code(db, code):
     cur.execute('select * from HZMorph where tHZ = ?', (unichar(code),))
     return cur.fetchall()
 
+def delete_from(db, table, d):
+    assert d
+    sql = 'delete from %s where %s' % (
+            table,
+            ' and '.join(['%s = ?' % (s,) for s in d.iterkeys()]),
+            )
+    try:
+        db.execute(sql, d.values())
+    except:
+        print >> sys.stderr, sql, d
+        raise
+
 def _insert_db(db, table, d):
     assert d
     sql = 'insert into %s (%s) values (%s)' % (
@@ -245,6 +257,28 @@ def _insert_db(db, table, d):
     except:
         print >> sys.stderr, sql
         raise
+
+def insert_code_to(db, table, code):
+    d = {}
+    c = unichar(code)
+    if table == 'HZGraph':
+        d['tHanzi'] = c
+    elif table == 'HZMorph':
+        d['tHZ'] = c
+        d['tPY'] = u''
+        d['tMGCR'] = u''
+    _insert_db(db, table, d)
+    cur = db.cursor()
+    sql = 'select * from %s where %s' % (
+            table,
+            ' and '.join(['%s = ?' % (s,) for s in d.iterkeys()]),
+            )
+    try:
+        cur.execute(sql, d.values())
+    except:
+        print >> sys.stderr, sql, d
+        raise
+    return cur.fetchone()
 
 def insert_graph(db, *args, **kwargs):
     d = {}
