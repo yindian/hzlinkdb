@@ -164,6 +164,7 @@ def create(db):
             'tPhon      text, '
             'tPhPY      text, '
             'tPhGC      text, '
+            'bPhSP      boolean, '
             'tMsPY      text, '
             'tSndh      text, '
             'tVar1      text, '
@@ -290,6 +291,7 @@ _check_morph_func = dict(
         tPhon = lambda s, z: s is None or ishanzi(s),
         tPhPY = lambda s, z: s is None or validate_pinyin(s),
         tPhGC = lambda s, z: s is None or validate_mgcr(s),
+        bPhSP = lambda s, z: s is None or _chk(int(s) in (0, 1)),
         tMsPY = lambda s, z: s is None or map(validate_pinyin, s.split()),
         tSndh = lambda s, z: s is None or map(validate_pinyin, s.split()),
         tVar1 = lambda s, z: s is None or _chk(map(ishanzi, s.split())),
