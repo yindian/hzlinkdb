@@ -91,6 +91,8 @@ def normalize_pinyin(s):
 
 _py_tone_digit_pat = re.compile(ur'[1-5]')
 def validate_pinyin(s):
+    if not s:
+        return False
     assert len(s.split()) == 1
     s.encode('ascii')
     assert u'1' <= s[-1] <= u'5'
@@ -98,6 +100,8 @@ def validate_pinyin(s):
     return True
 
 def validate_mgcr(s):
+    if not s:
+        return False
     assert len(s.split()) == 1
     s.encode('ascii')
     assert s.isalpha()
