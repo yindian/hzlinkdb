@@ -203,7 +203,7 @@ def _tables_key_linker(k, s=None):
         s = k
     return '<a href="/kv?n=tables&k=%s">%s</a>' % (k, s)
 
-_charset = set(['kGB0', 'kGB1', 'kBigFive', 'kJis0'])
+_charset = set(['kGB0', 'kGB1', 'kBigFive', 'kJis0', 'kJis1'])
 
 def _variants_linker(k, v):
     if k in _charset:

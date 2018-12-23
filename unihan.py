@@ -363,6 +363,7 @@ _read_data('Unihan_OtherMappings.txt', set([
     'kGB1',
     'kBigFive',
     'kJis0',
+    'kJis1',
     ]), _variants)
 _pat_u_wo_less_than = re.compile(r'U\+[^< ]+')
 _pat_ABC_GHJKMPT = re.compile(r'[ABCGHJKMPT]')
@@ -376,6 +377,7 @@ _variants_splitter = dict(
         kGB1 = _pat_quwei_qu.findall,
         kBigFive = _pat_quwei_qu.findall,
         kJis0 = _pat_quwei_qu.findall,
+        kJis1 = _pat_quwei_qu.findall,
         )
 _variants_value_sort_key = dict(
         kRSUnicode = _multi_numeric_sort,
