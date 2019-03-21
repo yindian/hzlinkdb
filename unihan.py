@@ -409,6 +409,12 @@ def get_variants_by_code_w_link(code, keys=None, linker=None):
             _variants_splitter)
 
 def get_codes_by_variant(k, v):
+    if k == 'kIICore' and len(v) > 1:
+        s = set(_lookup_reverse_indices(_variants_rev_idx, k, v[0], _variants))
+        for c in v[1:]:
+            s.intersection_update(_lookup_reverse_indices(
+                _variants_rev_idx, k, c, _variants))
+        return sorted(s, key=_iicore_sort_key_factory(_variants, k, v[0]))
     return _lookup_reverse_indices(_variants_rev_idx, k, v,
             _variants, _variants_code_sort_key_factory)
 
