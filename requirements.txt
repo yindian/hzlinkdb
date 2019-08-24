@@ -1,6 +1,6 @@
 click==6.7
 czipfile==1.0.0
-Flask==0.12.4
+Flask==1.1.1
 gevent==1.2.2
 greenlet==0.4.13
 itsdangerous==0.24
@@ -8,4 +8,4 @@ Jinja2==2.10.1
 MarkupSafe==1.1.1
 PyICU==2.0.3
 Unidecode==1.0.22
-Werkzeug==0.14.1
+Werkzeug==0.15.5
