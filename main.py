@@ -204,6 +204,7 @@ def _tables_key_linker(k, s=None):
     return '<a href="/kv?n=tables&k=%s">%s</a>' % (k, s)
 
 _charset = set(['kGB0', 'kGB1', 'kBigFive', 'kJis0', 'kJis1'])
+_noncode = set(['kIICore', 'kTotalStrokes', 'kUnihanCore2020'])
 
 def _variants_linker(k, v):
     if k in _charset:
@@ -215,7 +216,7 @@ def _variants_linker(k, v):
         return '<span class="radical">%s</span>&nbsp;\
 <a href="/l?n=variants&k=%s&v=%s">%s</a>' % (
             unichr(0x2F00 + radical), k, vv, v)
-    elif k == 'kIICore':
+    elif k in _noncode:
         return '<a href="/l?n=variants&k=%s&v=%s">%s</a>' % (k, vv, v)
     return '<a href="/?q=%s">%s</a>&nbsp;\
 <a href="/l?n=variants&k=%s&v=%s">%s</a>' % (

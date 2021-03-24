@@ -223,6 +223,7 @@ _readings_splitter = dict(
         kHanyuPinlu = _pat_remove_paren_digits.findall,
         kHanyuPinyin = _split_hanyu_pinyin,
         kXHC1983 = _split_hanyu_pinyin,
+        kTGHZ2013 = _split_hanyu_pinyin,
         )
 _readings_transformer = {}
 _readings_value_sort_key = {}
@@ -353,10 +354,14 @@ def get_values_of_reading(k):
             k, _readings_value_sort_key)
 
 _variants = _read_data('Unihan_Variants.txt')
+_read_data('Unihan_DictionaryLikeData.txt', set([
+    'kUnihanCore2020',
+    ]), _variants)
 _read_data('Unihan_IRGSources.txt', set([
     'kCompatibilityVariant',
     'kIICore',
     'kRSUnicode',
+    'kTotalStrokes',
     ]), _variants)
 _read_data('Unihan_OtherMappings.txt', set([
     'kGB0',
@@ -373,6 +378,7 @@ _variants_splitter = dict(
         kSpecializedSemanticVariant = _pat_u_wo_less_than.findall,
         kZVariant = _pat_u_wo_less_than.findall,
         kIICore = _pat_ABC_GHJKMPT.findall,
+        kUnihanCore2020 = _pat_ABC_GHJKMPT.findall,
         kGB0 = _pat_quwei_qu.findall,
         kGB1 = _pat_quwei_qu.findall,
         kBigFive = _pat_quwei_qu.findall,
@@ -381,6 +387,7 @@ _variants_splitter = dict(
         )
 _variants_value_sort_key = dict(
         kRSUnicode = _multi_numeric_sort,
+        kTotalStrokes = _multi_numeric_sort,
         kCompatibilityVariant = _unicode_point_sort,
         kSemanticVariant = _unicode_point_sort,
         kSimplifiedVariant = _unicode_point_sort,
@@ -399,6 +406,7 @@ def _iicore_sort_key_factory(d, k, v):
         assert False
     return _sort_key
 _variants_code_sort_key_factory['kIICore'] = _iicore_sort_key_factory
+_variants_code_sort_key_factory['kUnihanCore2020'] = _iicore_sort_key_factory
 _variants_rev_idx = _build_reverse_indices(_variants, _variants_splitter)
 
 def get_variants_by_code(code, keys=None):
